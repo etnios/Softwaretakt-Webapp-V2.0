@@ -1,0 +1,3628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Softwaretakt - Music Production Studio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #000000, #0a0a1a, #1a0a1a);
+            color: white;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Animated particles */
+        .particle {
+            position: fixed;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0,255,255,0.3), transparent);
+            animation: float 8s infinite ease-in-out;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0%, 100% { 
+                transform: translateY(0px) translateX(0px); 
+                opacity: 0.3; 
+            }
+            50% { 
+                transform: translateY(-20px) translateX(10px); 
+                opacity: 0.8; 
+            }
+        }
+
+        /* Navigation */
+        .nav-bar {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0,255,255,0.2);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .app-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #00ffff;
+            font-size: 18px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00ff00;
+            box-shadow: 0 0 10px rgba(0,255,0,0.5);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .audio-status {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .audio-enabled {
+            background: rgba(0,255,0,0.2);
+            color: #00ff00;
+        }
+
+        .audio-disabled {
+            background: rgba(255,0,0,0.2);
+            color: #ff6666;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: grid;
+            grid-template-areas: 
+                "tracks sequencer"
+                "samples controls";
+            grid-template-columns: 180px 1fr;
+            grid-template-rows: minmax(200px, 45vh) minmax(250px, 55vh);
+            gap: 8px;
+            padding: 8px;
+            height: calc(100vh - 60px);
+            overflow: hidden;
+        }
+
+        /* Panels */
+        .panel {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            overflow-y: auto;
+            max-height: 100%;
+        }
+
+        .panel h3 {
+            font-size: 12px;
+            margin-bottom: 12px;
+            color: #00ffff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Track Selector */
+        .track-panel {
+            grid-area: tracks;
+        }
+
+        .track-item {
+            width: 100%;
+            padding: 6px;
+            margin-bottom: 4px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 10px;
+        }
+
+        .track-item:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-1px);
+        }
+
+        .track-item.active {
+            background: linear-gradient(135deg, rgba(0,255,255,0.3), rgba(0,128,255,0.2));
+            border-color: #00ffff;
+            color: #00ffff;
+            box-shadow: 0 4px 16px rgba(0,255,255,0.2);
+        }
+
+        .track-header {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 4px;
+        }
+
+        .track-icon {
+            font-size: 12px;
+        }
+
+        .track-name {
+            flex: 1;
+            font-weight: bold;
+            font-size: 9px;
+        }
+
+        .track-engine {
+            font-size: 7px;
+            color: rgba(255,255,255,0.6);
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+        .track-controls {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .engine-btn {
+            width: 16px;
+            height: 16px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 3px;
+            color: white;
+            cursor: pointer;
+            font-size: 8px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .engine-btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: scale(1.1);
+        }
+
+        .engine-btn.active {
+            background: linear-gradient(45deg, #ff6600, #ff4400);
+            border-color: #ff6600;
+            color: white;
+            box-shadow: 0 0 8px rgba(255,102,0,0.4);
+        }
+
+        .track-assignment {
+            flex: 1;
+            font-size: 8px;
+            color: rgba(255,255,255,0.8);
+            text-align: right;
+            font-weight: bold;
+        }
+
+        /* Legacy track-button for compatibility */
+        .track-button {
+            width: 100%;
+            padding: 10px 12px;
+            margin-bottom: 6px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 12px;
+            text-align: left;
+        }
+
+        .track-button:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-1px);
+        }
+
+        .track-button.active {
+            background: linear-gradient(135deg, rgba(0,255,255,0.3), rgba(0,128,255,0.2));
+            border-color: #00ffff;
+            color: #00ffff;
+            box-shadow: 0 4px 16px rgba(0,255,255,0.2);
+        }
+
+        /* Sequencer */
+        .sequencer-panel {
+            grid-area: sequencer;
+        }
+
+        .transport-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .play-button {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #00ff00, #00cc00);
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(0,255,0,0.3);
+        }
+
+        .play-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0,255,0,0.4);
+        }
+
+        .play-button.playing {
+            background: linear-gradient(45deg, #ff4444, #cc0000);
+            box-shadow: 0 4px 16px rgba(255,68,68,0.3);
+        }
+
+        .step-grid {
+            display: grid;
+            grid-template-columns: repeat(16, 1fr);
+            gap: 3px;
+            flex: 1;
+        }
+
+        .step {
+            aspect-ratio: 1;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 4px;
+            background: rgba(255,255,255,0.05);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .step:hover {
+            background: rgba(0,255,255,0.2);
+            box-shadow: 0 0 8px rgba(0,255,255,0.3);
+        }
+
+        .step.active {
+            background: linear-gradient(45deg, #00ffff, #0080ff);
+            border-color: #00ffff;
+            box-shadow: 0 0 12px rgba(0,255,255,0.5);
+        }
+
+        .step.current {
+            border-color: #ffff00;
+            box-shadow: 0 0 16px rgba(255,255,0,0.8);
+            transform: scale(1.1);
+        }
+
+        /* Piano Keyboard - Compact Left-Side Layout */
+        .keyboard-container {
+            margin-top: 8px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 4px;
+            padding: 4px;
+            border: 1px solid rgba(255,255,255,0.1);
+            width: 160px; /* Reduced width to fit proper piano layout */
+            float: left; /* Position on left side */
+            clear: left;
+        }
+
+        .keyboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3px;
+        }
+
+        .keyboard-controls {
+            display: flex;
+            gap: 2px;
+            align-items: center;
+        }
+
+        .keyboard-btn {
+            width: 20px;
+            height: 14px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 2px;
+            color: white;
+            cursor: pointer;
+            font-size: 5px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .keyboard-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .keyboard-btn.recording {
+            background: linear-gradient(45deg, #ff0000, #cc0000);
+            color: white;
+            box-shadow: 0 0 6px rgba(255,0,0,0.4);
+        }
+
+        .piano-keyboard {
+            display: flex;
+            height: 28px; /* Reduced from 40px */
+            background: rgba(0,0,0,0.5);
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .piano-key {
+            border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            transition: all 0.1s ease;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            font-size: 5px;
+            font-weight: bold;
+            user-select: none;
+            position: relative;
+            border-radius: 2px;
+        }
+
+        .piano-key.white {
+            background: linear-gradient(180deg, #f8f8f8, #e0e0e0);
+            color: #333;
+            height: 28px;
+            width: 20px; /* Fixed width for white keys */
+            z-index: 1;
+        }
+
+        .piano-key.black {
+            background: linear-gradient(180deg, #333, #111);
+            color: white;
+            height: 18px; /* Slightly shorter than white keys */
+            width: 12px; /* Narrower black keys */
+            position: absolute;
+            z-index: 2;
+        }
+
+        /* Position black keys between white keys */
+        .piano-key.black[data-note="1"] { left: 14px; } /* C# */
+        .piano-key.black[data-note="3"] { left: 34px; } /* D# */
+        .piano-key.black[data-note="6"] { left: 74px; } /* F# */
+        .piano-key.black[data-note="8"] { left: 94px; } /* G# */
+        .piano-key.black[data-note="10"] { left: 114px; } /* A# */
+
+        .piano-key:hover {
+            transform: scale(1.05);
+        }
+
+        .piano-key.white:hover {
+            background: linear-gradient(180deg, #fff, #f0f0f0);
+        }
+
+        .piano-key.black:hover {
+            background: linear-gradient(180deg, #555, #222);
+        }
+
+        .piano-key:active,
+        .piano-key.pressed {
+            transform: scale(0.95);
+        }
+
+        .piano-key.white:active,
+        .piano-key.white.pressed {
+            background: linear-gradient(180deg, #00ffff, #00cccc);
+            color: #000;
+        }
+
+        .piano-key.black:active,
+        .piano-key.black.pressed {
+            background: linear-gradient(180deg, #00ffff, #0088aa);
+            color: #000;
+        }
+
+        .piano-key.white.has-note {
+            background: linear-gradient(180deg, #ffff00, #cccc00);
+            color: #000;
+            box-shadow: 0 0 3px rgba(255,255,0,0.6);
+        }
+
+        .piano-key.black.has-note {
+            background: linear-gradient(180deg, #ffaa00, #cc8800);
+            color: #000;
+            box-shadow: 0 0 3px rgba(255,170,0,0.6);
+        }
+
+        /* Future LFO/Control Area - Reserve space on the right */
+        .future-controls-area {
+            float: right;
+            width: calc(100% - 170px); /* Remaining space after keyboard */
+            height: 50px;
+            background: rgba(0,0,0,0.1);
+            border: 1px dashed rgba(255,255,255,0.2);
+            border-radius: 4px;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.4);
+            font-size: 10px;
+        }
+
+        /* Step Grid Enhancements */
+        .step.has-pitch {
+            background: linear-gradient(135deg, #00ffff, #0088aa);
+            border: 1px solid #00ffff;
+            box-shadow: 0 0 6px rgba(0,255,255,0.4);
+        }
+
+        .step.selected-for-pitch {
+            background: linear-gradient(135deg, #ffff00, #cccc00);
+            border: 2px solid #ffff00;
+            box-shadow: 0 0 8px rgba(255,255,0,0.6);
+            animation: pulse 1s infinite;
+        }
+
+        .step.has-pitch.active {
+            background: linear-gradient(135deg, #00ff00, #008800);
+            border: 1px solid #00ff00;
+        }
+
+        .step.selected-for-edit {
+            background: linear-gradient(135deg, #ff6600, #cc4400);
+            border: 2px solid #ff6600;
+            box-shadow: 0 0 12px rgba(255,102,0,0.8);
+            animation: pulse 1.5s infinite;
+        }
+
+        .step.has-params {
+            border-bottom: 3px solid #ff6600;
+        }
+
+        .step.has-params.active {
+            border-bottom: 3px solid #ff6600;
+        }
+
+        .step.holding {
+            background: linear-gradient(135deg, #ffaa00, #ff6600);
+            border: 2px solid #ffaa00;
+            box-shadow: 0 0 16px rgba(255,170,0,0.8);
+            transform: scale(1.05);
+            animation: pulse 0.3s infinite;
+        }
+
+        .step.touching {
+            background: linear-gradient(135deg, #ffffff, #cccccc);
+            border: 1px solid #ffffff;
+            transform: scale(0.95);
+            transition: all 0.1s ease;
+        }
+
+        /* Parameter Panel Styles */
+        .step-param-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,102,0,0.3);
+            border-radius: 12px;
+            padding: 16px;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+        }
+
+        .param-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255,102,0,0.3);
+            color: #ff6600;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .param-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .param-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .param-row label {
+            min-width: 60px;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .param-row input[type="range"] {
+            flex: 1;
+            height: 4px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .param-row input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #ff6600;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 4px rgba(255,102,0,0.5);
+        }
+
+        .param-row span {
+            min-width: 40px;
+            text-align: right;
+            color: #ff6600;
+            font-weight: bold;
+            font-size: 11px;
+        }
+
+        /* Sample Browser */
+        .sample-panel {
+            grid-area: samples;
+            overflow-y: auto;
+        }
+
+        .sample-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            margin-bottom: 6px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+
+        .sample-item:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-1px);
+        }
+
+        .sample-item.active {
+            background: linear-gradient(135deg, rgba(0,255,255,0.3), rgba(0,128,255,0.2));
+            border: 1px solid rgba(0,255,255,0.3);
+            color: #00ffff;
+        }
+
+        .sample-preview {
+            width: 40px;
+            height: 24px;
+            background: rgba(0,255,255,0.1);
+            border-radius: 4px;
+            border: 1px solid rgba(0,255,255,0.2);
+        }
+
+        /* Sample Controls */
+        .controls-panel {
+            grid-area: controls;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .waveform-container {
+            background: rgba(0,0,0,0.4);
+            border-radius: 8px;
+            padding: 12px;
+            flex: 1;
+            min-height: 100px;
+            border: 1px solid rgba(0,255,255,0.1);
+        }
+
+        .waveform {
+            width: 100%;
+            height: 100%;
+            border-radius: 4px;
+            cursor: crosshair;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+
+        .playback-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-1px);
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+
+        .param-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            margin-top: 8px;
+        }
+
+        .param-group {
+            background: rgba(255,255,255,0.05);
+            border-radius: 6px;
+            padding: 4px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .param-label {
+            font-size: 9px;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 3px;
+            text-transform: uppercase;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .param-row {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .param-btn {
+            width: 18px;
+            height: 18px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 3px;
+            color: white;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .param-btn:hover {
+            background: rgba(0,255,255,0.3);
+            border-color: #00ffff;
+            transform: scale(1.1);
+        }
+
+        .param-btn:active {
+            transform: scale(1.2);
+            box-shadow: 0 0 8px rgba(0,255,255,0.5);
+        }
+
+        .param-value {
+            flex: 1;
+            font-size: 8px;
+            color: #00ffff;
+            text-align: center;
+            font-weight: bold;
+            background: rgba(0,0,0,0.2);
+            padding: 4px;
+            border-radius: 4px;
+            border: 1px solid rgba(0,255,255,0.2);
+        }
+
+        /* Info display */
+        .info-text {
+            font-size: 11px;
+            color: rgba(255,255,255,0.7);
+            flex: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 140px 1fr;
+                gap: 6px;
+                padding: 6px;
+            }
+            
+            .param-controls {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                grid-template-areas: 
+                    "sequencer"
+                    "tracks"
+                    "samples"
+                    "controls";
+                grid-template-rows: auto auto auto 1fr;
+                gap: 4px;
+                padding: 4px;
+            }
+            
+            .param-controls {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 2px;
+            }
+            
+            .param-btn {
+                width: 16px;
+                height: 16px;
+                font-size: 8px;
+            }
+            
+            .param-value {
+                font-size: 7px;
+            }
+            
+            .waveform {
+                width: 100% !important;
+                height: 30px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background particles -->
+    <div class="particle" style="top: 10%; left: 20%; width: 20px; height: 20px; animation-delay: 0s;"></div>
+    <div class="particle" style="top: 30%; left: 70%; width: 15px; height: 15px; animation-delay: 2s;"></div>
+    <div class="particle" style="top: 60%; left: 30%; width: 25px; height: 25px; animation-delay: 4s;"></div>
+    <div class="particle" style="top: 80%; left: 80%; width: 18px; height: 18px; animation-delay: 6s;"></div>
+
+    <div class="app-container">
+        <!-- Navigation -->
+        <div class="nav-bar">
+            <div class="app-title">
+                <div class="status-dot"></div>
+                <span>SOFTWARETAKT</span>
+            </div>
+            <div id="audioStatus" class="audio-status audio-enabled">AUDIO: READY</div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Track Selector -->
+            <div class="track-panel panel">
+                <h3 style="font-size: 12px; margin-bottom: 8px;">Tracks</h3>
+                
+                <div id="trackList">
+                    <div class="track-item active" data-track="0" onclick="selectTrack(0)">
+                        <div class="track-header">
+                            <span class="track-icon">🥁</span>
+                            <span class="track-name">Track 1</span>
+                            <span class="track-engine" id="engine-0">SAMPLER</span>
+                        </div>
+                        <div class="track-controls">
+                            <button class="engine-btn active" onclick="toggleEngine(0)" data-engine="sampler">S</button>
+                            <button class="engine-btn" onclick="toggleEngine(0)" data-engine="synth">Y</button>
+                            <span class="track-assignment" id="assignment-0">Kick</span>
+                        </div>
+                    </div>
+                    
+                    <div class="track-item" data-track="1" onclick="selectTrack(1)">
+                        <div class="track-header">
+                            <span class="track-icon">🥁</span>
+                            <span class="track-name">Track 2</span>
+                            <span class="track-engine" id="engine-1">SAMPLER</span>
+                        </div>
+                        <div class="track-controls">
+                            <button class="engine-btn active" onclick="toggleEngine(1)" data-engine="sampler">S</button>
+                            <button class="engine-btn" onclick="toggleEngine(1)" data-engine="synth">Y</button>
+                            <span class="track-assignment" id="assignment-1">Snare</span>
+                        </div>
+                    </div>
+                    
+                    <div class="track-item" data-track="2" onclick="selectTrack(2)">
+                        <div class="track-header">
+                            <span class="track-icon">🎵</span>
+                            <span class="track-name">Track 3</span>
+                            <span class="track-engine" id="engine-2">SYNTH</span>
+                        </div>
+                        <div class="track-controls">
+                            <button class="engine-btn" onclick="toggleEngine(2)" data-engine="sampler">S</button>
+                            <button class="engine-btn active" onclick="toggleEngine(2)" data-engine="synth">Y</button>
+                            <span class="track-assignment" id="assignment-2">C3</span>
+                        </div>
+                    </div>
+                    
+                    <div class="track-item" data-track="3" onclick="selectTrack(3)">
+                        <div class="track-header">
+                            <span class="track-icon">👏</span>
+                            <span class="track-name">Track 4</span>
+                            <span class="track-engine" id="engine-3">SAMPLER</span>
+                        </div>
+                        <div class="track-controls">
+                            <button class="engine-btn active" onclick="toggleEngine(3)" data-engine="sampler">S</button>
+                            <button class="engine-btn" onclick="toggleEngine(3)" data-engine="synth">Y</button>
+                            <span class="track-assignment" id="assignment-3">Clap</span>
+                        </div>
+                    </div>
+                    
+                    <div class="track-item" data-track="4" onclick="selectTrack(4)">
+                        <div class="track-header">
+                            <span class="track-icon">🎵</span>
+                            <span class="track-name">Track 5</span>
+                            <span class="track-engine" id="engine-4">SYNTH</span>
+                        </div>
+                        <div class="track-controls">
+                            <button class="engine-btn" onclick="toggleEngine(4)" data-engine="sampler">S</button>
+                            <button class="engine-btn active" onclick="toggleEngine(4)" data-engine="synth">Y</button>
+                            <span class="track-assignment" id="assignment-4">G3</span>
+                        </div>
+                    </div>
+                    
+                    <div class="track-item" data-track="5" onclick="selectTrack(5)">
+                        <div class="track-header">
+                            <span class="track-icon">🥁</span>
+                            <span class="track-name">Track 6</span>
+                            <span class="track-engine" id="engine-5">SAMPLER</span>
+                        </div>
+                        <div class="track-controls">
+                            <button class="engine-btn active" onclick="toggleEngine(5)" data-engine="sampler">S</button>
+                            <button class="engine-btn" onclick="toggleEngine(5)" data-engine="synth">Y</button>
+                            <span class="track-assignment" id="assignment-5">Tom</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sequencer -->
+            <div class="sequencer-panel panel">
+                <h3>Step Sequencer</h3>
+                <div class="transport-controls">
+                    <button class="play-button" id="sequencerPlay" onclick="console.log('🎵 Play button clicked!'); toggleSequencer()">▶</button>
+                    
+                    <!-- Record Button with Quantize Toggle -->
+                    <div class="record-control" style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                        <button class="record-button" id="recordButton" onclick="toggleRecord()" style="width: 45px; height: 45px; border: none; border-radius: 50%; background: linear-gradient(45deg, #ff0000, #cc0000); color: white; font-size: 16px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 16px rgba(255,0,0,0.3);">⏺</button>
+                        <div class="quantize-toggle" style="display: flex; align-items: center; gap: 2px;">
+                            <span style="font-size: 8px; color: rgba(255,255,255,0.7);">Q</span>
+                            <button class="toggle-switch" id="quantizeToggle" onclick="toggleQuantize()" style="width: 24px; height: 12px; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; background: linear-gradient(45deg, #00ff00, #00cc00); cursor: pointer; position: relative; transition: all 0.3s ease;">
+                                <div class="toggle-knob" style="width: 8px; height: 8px; border-radius: 50%; background: white; position: absolute; top: 1px; right: 1px; transition: all 0.3s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.3);"></div>
+                            </button>
+                            <span id="quantizeLabel" style="font-size: 8px; color: #00ff00; font-weight: bold;">ON</span>
+                        </div>
+                    </div>
+                    
+                    <div class="tempo-controls" style="display: flex; align-items: center; gap: 6px;">
+                        <!-- BPM Control -->
+                        <div style="display: flex; align-items: center; gap: 2px;">
+                            <span style="font-size: 9px; color: rgba(255,255,255,0.7);">BPM</span>
+                            <div style="display: flex; flex-direction: column; align-items: center;">
+                                <button class="control-btn" style="font-size: 8px; padding: 1px 4px; height: 12px;" onclick="changeBPM(1)">▲</button>
+                                <span id="bpmDisplay" style="color: #00ffff; font-weight: bold; font-size: 11px; min-width: 30px; text-align: center;">128</span>
+                                <button class="control-btn" style="font-size: 8px; padding: 1px 4px; height: 12px;" onclick="changeBPM(-1)">▼</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Page Control -->
+                        <div style="display: flex; align-items: center; gap: 2px;">
+                            <span style="font-size: 9px; color: rgba(255,255,255,0.7);">PAGE</span>
+                            <div style="display: flex; flex-direction: column; align-items: center;">
+                                <button class="control-btn" style="font-size: 8px; padding: 1px 4px; height: 12px;" onclick="changePage(1)">▲</button>
+                                <span id="pageDisplay" style="color: #00ffff; font-weight: bold; font-size: 11px; min-width: 25px; text-align: center;">1/4</span>
+                                <button class="control-btn" style="font-size: 8px; padding: 1px 4px; height: 12px;" onclick="changePage(-1)">▼</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Pattern Length Control -->
+                        <div style="display: flex; align-items: center; gap: 2px;">
+                            <span style="font-size: 9px; color: rgba(255,255,255,0.7);">LEN</span>
+                            <div style="display: flex; flex-direction: column; align-items: center;">
+                                <button class="control-btn" style="font-size: 8px; padding: 1px 4px; height: 12px;" onclick="changePatternLength(1)">▲</button>
+                                <span id="lengthDisplay" style="color: #00ffff; font-weight: bold; font-size: 11px; min-width: 20px; text-align: center;">16</span>
+                                <button class="control-btn" style="font-size: 8px; padding: 1px 4px; height: 12px;" onclick="changePatternLength(-1)">▼</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Time Signature Control -->
+                        <div style="display: flex; align-items: center; gap: 2px;">
+                            <span style="font-size: 9px; color: rgba(255,255,255,0.7);">SIG</span>
+                            <div style="display: flex; flex-direction: column; align-items: center;">
+                                <button class="control-btn" style="font-size: 8px; padding: 1px 4px; height: 12px;" onclick="changeTimeSignature(1)">▲</button>
+                                <span id="signatureDisplay" style="color: #00ffff; font-weight: bold; font-size: 11px; min-width: 25px; text-align: center;">4/4</span>
+                                <button class="control-btn" style="font-size: 8px; padding: 1px 4px; height: 12px;" onclick="changeTimeSignature(-1)">▼</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="control-btn" onclick="clearPattern()" style="font-size: 10px;">CLEAR</button>
+                </div>
+                <div class="step-grid" id="stepGrid">
+                    <!-- Steps generated by JavaScript -->
+                </div>
+                
+                <!-- Help Text -->
+                <div style="margin: 8px 0; padding: 6px; background: rgba(0,0,0,0.3); border-radius: 4px; font-size: 10px; color: rgba(255,255,255,0.7);">
+                    <div style="margin-bottom: 2px;"><strong>Step Controls:</strong> Tap=Toggle | Double-Tap=Pitch Entry | Hold=Parameter Lock</div>
+                    <div style="margin-bottom: 2px;"><strong>Recording:</strong> ⏺ Record button + Q toggle (ON=Quantized, OFF=Unquantized)</div>
+                    <div style="margin-bottom: 2px;"><strong>Pages:</strong> Increase LEN to 32+ to access pages 2-4 | Each page has independent steps</div>
+                    <div>🟢=Active | 🟡=Selected for Pitch | 🟠=Parameter Edit | 🔵=Has Pitch | Orange Bar=Has Params</div>
+                </div>
+                
+                <!-- Mini Piano Keyboard -->
+                <div class="keyboard-container">
+                    <div class="keyboard-header">
+                        <span style="font-size: 7px; color: rgba(255,255,255,0.7);">PIANO</span>
+                        <div class="keyboard-controls">
+                            <button class="keyboard-btn" id="recordBtn" onclick="toggleRecordMode()">🔴</button>
+                            <button class="keyboard-btn" onclick="transposeKeyboard(-12)">-OCT</button>
+                            <button class="keyboard-btn" onclick="transposeKeyboard(12)">+OCT</button>
+                            <span id="octaveDisplay" style="font-size: 7px; color: #00ffff;">C3</span>
+                        </div>
+                    </div>
+                    <div class="piano-keyboard" id="pianoKeyboard">
+                        <!-- Piano keys generated by JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Future LFO/Control Area -->
+                <div class="future-controls-area">
+                    <span>LFOs & Effects (Reserved Space)</span>
+                </div>
+                
+                <!-- Clear floats -->
+                <div style="clear: both;"></div>
+            </div>
+
+            <!-- Sample Browser -->
+            <div class="sample-panel panel">
+                <h3>Demo Samples</h3>
+                <div class="sample-item active" data-sample="kick" onclick="selectSample(this, 'kick')">
+                    <canvas class="sample-preview" width="40" height="24"></canvas>
+                    <span>🥁 Kick.wav</span>
+                </div>
+                <div class="sample-item" data-sample="snare" onclick="selectSample(this, 'snare')">
+                    <canvas class="sample-preview" width="40" height="24"></canvas>
+                    <span>🥁 Snare.wav</span>
+                </div>
+                <div class="sample-item" data-sample="hihat_closed" onclick="selectSample(this, 'hihat_closed')">
+                    <canvas class="sample-preview" width="40" height="24"></canvas>
+                    <span>🎵 HiHat_Closed.wav</span>
+                </div>
+                <div class="sample-item" data-sample="hihat_open" onclick="selectSample(this, 'hihat_open')">
+                    <canvas class="sample-preview" width="40" height="24"></canvas>
+                    <span>🎵 HiHat_Open.wav</span>
+                </div>
+                <div class="sample-item" data-sample="clap" onclick="selectSample(this, 'clap')">
+                    <canvas class="sample-preview" width="40" height="24"></canvas>
+                    <span>👏 Clap.wav</span>
+                </div>
+                <div class="sample-item" data-sample="tom" onclick="selectSample(this, 'tom')">
+                    <canvas class="sample-preview" width="40" height="24"></canvas>
+                    <span>🥁 Tom.wav</span>
+                </div>
+            </div>
+
+            <!-- Sample Controls -->
+            <div class="controls-panel panel">
+                <h3 style="font-size: 12px; margin-bottom: 6px;">Sample Editor</h3>
+                <div class="waveform-container">
+                    <div style="display: flex; gap: 8px; height: 40px;">
+                        <div style="flex: 2;">
+                            <label style="font-size: 8px; color: rgba(255,255,255,0.7);">WAVEFORM & TRIM POINTS</label>
+                            <canvas id="waveformCanvas" class="waveform" width="300" height="40"></canvas>
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="font-size: 8px; color: rgba(255,255,255,0.7);">ENVELOPE (ADSR)</label>
+                            <canvas id="envelopeCanvas" width="150" height="40" style="background: rgba(0,0,0,0.3); border-radius: 4px; cursor: pointer; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="playback-controls" style="margin: 6px 0;">
+                    <button class="control-btn" style="font-size: 10px; padding: 4px 8px;" onclick="playSample()">▶️ Play</button>
+                    <button class="control-btn" style="font-size: 10px; padding: 4px 8px;" onclick="stopSample()">⏹️ Stop</button>
+                    <button class="control-btn" style="font-size: 10px; padding: 4px 8px;" id="loopBtn" onclick="toggleLoop()">🔄 Loop</button>
+                    <span id="sampleInfo" class="info-text" style="font-size: 8px;">Kick.wav - 1.0s</span>
+                </div>
+
+                <div class="param-controls">
+                    <div class="param-group">
+                        <div class="param-label">Attack</div>
+                        <div class="param-row">
+                            <button class="param-btn" onclick="adjustParam('attack', -1)">-</button>
+                            <div class="param-value" id="attackValue">5ms</div>
+                            <button class="param-btn" onclick="adjustParam('attack', 1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="param-group">
+                        <div class="param-label">Decay</div>
+                        <div class="param-row">
+                            <button class="param-btn" onclick="adjustParam('decay', -1)">-</button>
+                            <div class="param-value" id="decayValue">50ms</div>
+                            <button class="param-btn" onclick="adjustParam('decay', 1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="param-group">
+                        <div class="param-label">Release</div>
+                        <div class="param-row">
+                            <button class="param-btn" onclick="adjustParam('release', -1)">-</button>
+                            <div class="param-value" id="releaseValue">100ms</div>
+                            <button class="param-btn" onclick="adjustParam('release', 1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="param-group">
+                        <div class="param-label">Pitch</div>
+                        <div class="param-row">
+                            <button class="param-btn" onclick="adjustParam('pitch', -1)">-</button>
+                            <div class="param-value" id="pitchValue">0</div>
+                            <button class="param-btn" onclick="adjustParam('pitch', 1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="param-group">
+                        <div class="param-label">Start</div>
+                        <div class="param-row">
+                            <button class="param-btn" onclick="adjustParam('start', -1)">-</button>
+                            <div class="param-value" id="startValue">0%</div>
+                            <button class="param-btn" onclick="adjustParam('start', 1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="param-group">
+                        <div class="param-label">Filter</div>
+                        <div class="param-row">
+                            <button class="param-btn" onclick="adjustParam('filter', -1)">-</button>
+                            <div class="param-value" id="filterValue">80%</div>
+                            <button class="param-btn" onclick="adjustParam('filter', 1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="param-group">
+                        <div class="param-label">Volume</div>
+                        <div class="param-row">
+                            <button class="param-btn" onclick="adjustParam('volume', -1)">-</button>
+                            <div class="param-value" id="volumeValue">85%</div>
+                            <button class="param-btn" onclick="adjustParam('volume', 1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="param-group">
+                        <div class="param-label">AutoTune</div>
+                        <div class="param-row">
+                            <button class="param-btn" onclick="adjustParam('autotune', -1)">-</button>
+                            <div class="param-value" id="autotuneValue">Off</div>
+                            <button class="param-btn" onclick="adjustParam('autotune', 1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="param-group">
+                        <div class="param-label">End</div>
+                        <div class="param-row">
+                            <button class="param-btn" onclick="adjustParam('end', -1)">-</button>
+                            <div class="param-value" id="endValue">100%</div>
+                            <button class="param-btn" onclick="adjustParam('end', 1)">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== SOFTWARETAKT AUDIO ENGINE =====
+        
+        console.log('🎵 Softwaretakt Loading...');
+        
+        // Global Audio State
+        let audioContext = null;
+        let masterGain = null;
+        let currentSample = 'kick';
+        let sampleBuffers = {};
+        let selectedTrack = 0;
+        
+        // ===== SEQUENCER STATE =====
+        let sequencerPlaying = false;
+        let currentStep = 0;
+        let selectedStepForEdit = -1;  // For parameter locks and detailed editing
+        let selectedStepForPitch = -1; // For pitch assignment
+        let sequencerInterval = null;
+        let startTime = 0;
+        let bpm = 128;
+        let timeSignature = { numerator: 4, denominator: 4 };
+        
+        // Page system like Digitakt
+        let currentPage = 0; // 0-3 for pages 1-4
+        let maxPages = 4;
+        let patternLength = 16; // Total pattern length in steps (can be 16, 32, 48, 64)
+        let stepsPerPage = 16; // Always show 16 steps per page
+        
+        // Calculate steps per bar based on time signature
+        function calculateStepsPerBar() {
+            return Math.max(8, Math.min(32, timeSignature.numerator * (16 / timeSignature.denominator)));
+        }
+        
+        let stepsPerBar = calculateStepsPerBar();
+        
+        // Get current page offset
+        function getCurrentPageOffset() {
+            return currentPage * stepsPerPage;
+        }
+        
+        // Get visible step range for current page
+        function getVisibleStepRange() {
+            const offset = getCurrentPageOffset();
+            return {
+                start: offset,
+                end: Math.min(offset + stepsPerPage, patternLength)
+            };
+        }
+        
+        // ===== STEP INTERACTION STATE =====
+        let stepTouchStartTime = 0;
+        let lastTapTime = 0;
+        let lastTappedStep = -1;
+        let holdTimeout = null;
+        const HOLD_DURATION = 400; // 400ms for hold (reduced for testing)
+        const DOUBLE_TAP_THRESHOLD = 300; // 300ms between taps
+        
+        // Unified sequencer state object for compatibility
+        const sequencerState = {
+            get isPlaying() { return sequencerPlaying; },
+            get currentStep() { return currentStep; },
+            get startTime() { return startTime; },
+            get stepDuration() { return 60 / (bpm * 4); }, // Dynamic based on BPM
+            get bpm() { return bpm; },
+            get timeSignature() { return timeSignature; },
+            get stepsPerBar() { return stepsPerBar; }
+        };
+        let stepData = Array(6).fill().map(() => Array(64).fill(false)); // Support up to 64 steps max
+        let isLooping = false;
+        let audioInitialized = false;
+        
+        // Unified track data structure for piano keyboard integration
+        let tracks = Array(6).fill().map((_, index) => ({
+            engine: ['sampler', 'sampler', 'synth', 'sampler', 'synth', 'sampler'][index],
+            assignment: ['kick', 'snare', 'C3', 'clap', 'G3', 'tom'][index],
+            steps: Array(64).fill().map(() => ({ active: false, pitch: null, frequency: null, params: {} })) // Support up to 64 steps
+        }));
+
+        // Track Configuration
+        const trackConfig = {
+            0: { engine: 'sampler', assignment: 'kick', icon: '🥁' },
+            1: { engine: 'sampler', assignment: 'snare', icon: '🥁' },
+            2: { engine: 'synth', assignment: 'C3', icon: '🎵' },
+            3: { engine: 'sampler', assignment: 'clap', icon: '👏' },
+            4: { engine: 'synth', assignment: 'G3', icon: '🎵' },
+            5: { engine: 'sampler', assignment: 'tom', icon: '🥁' }
+        };
+
+        // Synth frequencies for musical notes
+        const synthNotes = {
+            'C3': 130.81,
+            'D3': 146.83,
+            'E3': 164.81,
+            'F3': 174.61,
+            'G3': 196.00,
+            'A3': 220.00,
+            'B3': 246.94,
+            'C4': 261.63
+        };
+
+        // Parameter Values
+        const paramValues = {
+            attack: 5,
+            decay: 50,
+            release: 100,
+            pitch: 0,
+            start: 0,
+            end: 100,
+            filter: 80,
+            volume: 85,
+            autotune: 0
+        };
+
+        // Keyboard State
+        let keyboardOctave = 3;
+        let isRecording = false;
+        let stepNotes = {}; // Store notes for each step: {trackIndex: {stepIndex: note}}
+
+        // Extended synth frequencies for full keyboard
+        const keyboardNotes = {
+            'C2': 65.41, 'C#2': 69.30, 'D2': 73.42, 'D#2': 77.78, 'E2': 82.41, 'F2': 87.31, 'F#2': 92.50, 'G2': 98.00, 'G#2': 103.83, 'A2': 110.00, 'A#2': 116.54, 'B2': 123.47,
+            'C3': 130.81, 'C#3': 138.59, 'D3': 146.83, 'D#3': 155.56, 'E3': 164.81, 'F3': 174.61, 'F#3': 185.00, 'G3': 196.00, 'G#3': 207.65, 'A3': 220.00, 'A#3': 233.08, 'B3': 246.94,
+            'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13, 'E4': 329.63, 'F4': 349.23, 'F#4': 369.99, 'G4': 392.00, 'G#4': 415.30, 'A4': 440.00, 'A#4': 466.16, 'B4': 493.88,
+            'C5': 523.25, 'C#5': 554.37, 'D5': 587.33, 'D#5': 622.25, 'E5': 659.25, 'F5': 698.46, 'F#5': 739.99, 'G5': 783.99, 'G#5': 830.61, 'A5': 880.00, 'A#5': 932.33, 'B5': 987.77
+        };
+
+        // Piano key layout (white and black keys)
+        const pianoLayout = [
+            {note: 'C', type: 'white'}, {note: 'C#', type: 'black'}, {note: 'D', type: 'white'}, {note: 'D#', type: 'black'}, {note: 'E', type: 'white'},
+            {note: 'F', type: 'white'}, {note: 'F#', type: 'black'}, {note: 'G', type: 'white'}, {note: 'G#', type: 'black'}, {note: 'A', type: 'white'}, {note: 'A#', type: 'black'}, {note: 'B', type: 'white'}
+        ];
+
+        // ===== AUDIO INITIALIZATION =====
+        async function initAudio() {
+            if (audioInitialized) return true;
+            
+            try {
+                console.log('🔊 Initializing Web Audio API...');
+                
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                masterGain = audioContext.createGain();
+                masterGain.connect(audioContext.destination);
+                masterGain.gain.value = 0.7;
+
+                // Resume context if suspended
+                if (audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                }
+
+                // Generate all samples
+                await generateAllSamples();
+                
+                // Update UI
+                const statusEl = document.getElementById('audioStatus');
+                statusEl.className = 'audio-status audio-enabled';
+                statusEl.textContent = 'AUDIO: ENABLED ✅';
+                
+                audioInitialized = true;
+                console.log('✅ Audio system ready!');
+                return true;
+                
+            } catch (error) {
+                console.error('❌ Audio initialization failed:', error);
+                const statusEl = document.getElementById('audioStatus');
+                statusEl.className = 'audio-status audio-disabled';
+                statusEl.textContent = 'AUDIO: ERROR ❌';
+                return false;
+            }
+        }
+
+        // ===== SAMPLE GENERATION =====
+        async function generateAllSamples() {
+            console.log('🎵 Generating drum samples...');
+            
+            const sampleRate = audioContext.sampleRate;
+            
+            sampleBuffers.kick = generateKickSample(sampleRate);
+            sampleBuffers.snare = generateSnareSample(sampleRate);
+            sampleBuffers.hihat_closed = generateHiHatSample(sampleRate, false);
+            sampleBuffers.hihat_open = generateHiHatSample(sampleRate, true);
+            sampleBuffers.clap = generateClapSample(sampleRate);
+            sampleBuffers.tom = generateTomSample(sampleRate);
+            
+            console.log('🎶 All samples generated!');
+        }
+
+        function generateKickSample(sampleRate) {
+            const duration = 1.0;
+            const length = sampleRate * duration;
+            const buffer = audioContext.createBuffer(1, length, sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            for (let i = 0; i < length; i++) {
+                const t = i / sampleRate;
+                const decay = Math.exp(-t * 8);
+                const click = Math.exp(-t * 80) * Math.sin(t * 800 * Math.PI);
+                const tone = Math.sin(t * 60 * Math.PI) * decay;
+                data[i] = (click * 0.3 + tone * 0.7) * decay * 0.8;
+            }
+            return buffer;
+        }
+
+        function generateSnareSample(sampleRate) {
+            const duration = 0.3;
+            const length = sampleRate * duration;
+            const buffer = audioContext.createBuffer(1, length, sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            for (let i = 0; i < length; i++) {
+                const t = i / sampleRate;
+                const decay = Math.exp(-t * 15);
+                const noise = (Math.random() - 0.5) * 0.8;
+                const tone = Math.sin(t * 200 * Math.PI) * 0.4;
+                data[i] = (noise + tone) * decay * 0.6;
+            }
+            return buffer;
+        }
+
+        function generateHiHatSample(sampleRate, isOpen) {
+            const duration = isOpen ? 0.8 : 0.1;
+            const length = sampleRate * duration;
+            const buffer = audioContext.createBuffer(1, length, sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            for (let i = 0; i < length; i++) {
+                const t = i / sampleRate;
+                const decay = Math.exp(-t * (isOpen ? 3 : 20));
+                const noise = (Math.random() - 0.5);
+                const shimmer = Math.sin(t * 8000 * Math.PI) * 0.3;
+                data[i] = (noise + shimmer) * decay * 0.4;
+            }
+            return buffer;
+        }
+
+        function generateClapSample(sampleRate) {
+            const duration = 0.2;
+            const length = sampleRate * duration;
+            const buffer = audioContext.createBuffer(1, length, sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            for (let i = 0; i < length; i++) {
+                const t = i / sampleRate;
+                const decay = Math.exp(-t * 20);
+                let clap = 0;
+                
+                if (t < 0.01 || (t > 0.02 && t < 0.03) || (t > 0.05 && t < 0.06)) {
+                    clap = (Math.random() - 0.5) * 1.5;
+                } else {
+                    clap = (Math.random() - 0.5) * 0.3;
+                }
+                data[i] = clap * decay * 0.5;
+            }
+            return buffer;
+        }
+
+        function generateTomSample(sampleRate) {
+            const duration = 0.8;
+            const length = sampleRate * duration;
+            const buffer = audioContext.createBuffer(1, length, sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            for (let i = 0; i < length; i++) {
+                const t = i / sampleRate;
+                const decay = Math.exp(-t * 4);
+                const tone = Math.sin(t * 120 * Math.PI);
+                const harmonics = Math.sin(t * 240 * Math.PI) * 0.3;
+                data[i] = (tone + harmonics) * decay * 0.7;
+            }
+            return buffer;
+        }
+
+        // ===== AUDIO PLAYBACK =====
+        async function playSampleBuffer(sampleName) {
+            if (!audioInitialized) {
+                await initAudio();
+            }
+            
+            if (!audioContext || !sampleBuffers[sampleName]) {
+                console.log('⚠️ Audio not ready or sample not found:', sampleName);
+                return;
+            }
+            
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+            }
+            
+            const source = audioContext.createBufferSource();
+            const gainNode = audioContext.createGain();
+            const filterNode = audioContext.createBiquadFilter();
+            
+            source.buffer = sampleBuffers[sampleName];
+            
+            // Apply sample start/end points
+            const bufferDuration = source.buffer.duration;
+            const startOffset = (paramValues.start / 100) * bufferDuration;
+            const endOffset = (paramValues.end / 100) * bufferDuration;
+            const sampleDuration = endOffset - startOffset;
+            
+            // Apply pitch and autotune
+            let finalPitch = paramValues.pitch;
+            
+            // AutoTune logic
+            if (paramValues.autotune > 0) {
+                const autotuneNotes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; // Semitones in chromatic scale
+                const targetNote = autotuneNotes[paramValues.autotune - 1]; // -1 because index 0 is "Off"
+                
+                // Snap the current pitch to the nearest autotune note
+                const octaveShift = Math.floor(finalPitch / 12);
+                const noteInOctave = finalPitch % 12;
+                finalPitch = octaveShift * 12 + targetNote;
+                
+                console.log('🎵 AutoTune active: snapping to note', targetNote, 'final pitch:', finalPitch);
+            }
+            
+            const pitchRatio = Math.pow(2, finalPitch / 12);
+            source.playbackRate.value = pitchRatio;
+            
+            // Apply filter
+            filterNode.type = 'lowpass';
+            filterNode.frequency.value = 20000 * (paramValues.filter / 100);
+            
+            // Calculate envelope timing
+            const attackTime = paramValues.attack / 1000;
+            const decayTime = paramValues.decay / 1000;
+            const releaseTime = paramValues.release / 1000;
+            const sustainLevel = 0.7; // 70% of peak volume
+            const peakVolume = paramValues.volume / 100;
+            const sustainVolume = peakVolume * sustainLevel;
+            
+            const now = audioContext.currentTime;
+            
+            // ADSR Envelope Implementation
+            gainNode.gain.setValueAtTime(0, now);
+            
+            // Attack: 0 → peak volume
+            gainNode.gain.linearRampToValueAtTime(peakVolume, now + attackTime);
+            
+            // Decay: peak → sustain level
+            gainNode.gain.linearRampToValueAtTime(sustainVolume, now + attackTime + decayTime);
+            
+            // Sustain: hold at sustain level until release
+            const sustainTime = Math.max(0.1, sampleDuration - attackTime - decayTime - releaseTime);
+            gainNode.gain.setValueAtTime(sustainVolume, now + attackTime + decayTime + sustainTime);
+            
+            // Release: sustain → 0
+            gainNode.gain.linearRampToValueAtTime(0, now + attackTime + decayTime + sustainTime + releaseTime);
+            
+            // Connect audio graph
+            source.connect(filterNode);
+            filterNode.connect(gainNode);
+            gainNode.connect(masterGain);
+            
+            // Start playback with offset and duration
+            if (isLooping) {
+                source.loop = true;
+                source.loopStart = startOffset;
+                source.loopEnd = endOffset;
+                source.start(now, startOffset);
+                console.log('🔄 Looping from', startOffset + 's', 'to', endOffset + 's');
+            } else {
+                source.start(now, startOffset, sampleDuration + releaseTime);
+            }
+            
+            // Store reference for stopping
+            source.stopTime = now + attackTime + decayTime + sustainTime + releaseTime;
+            
+            console.log('🎵 Playing:', sampleName, 
+                       'Attack:', attackTime + 's', 
+                       'Decay:', decayTime + 's', 
+                       'Release:', releaseTime + 's',
+                       'Start:', (paramValues.start) + '%',
+                       'End:', (paramValues.end) + '%',
+                       'Pitch:', finalPitch + ' semitones',
+                       'Filter:', paramValues.filter + '%',
+                       'Volume:', paramValues.volume + '%');
+            
+            return source;
+        }
+
+        // ===== SYNTH ENGINE =====
+        async function playSynthNote(note, duration = 0.5) {
+            if (!audioInitialized) {
+                await initAudio();
+            }
+            
+            if (!audioContext) {
+                console.log('⚠️ Audio context not ready');
+                return;
+            }
+            
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+            }
+            
+            // Get frequency for the note
+            const frequency = synthNotes[note] || 261.63; // Default to C4
+            
+            // Create oscillator for synth tone
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            const filterNode = audioContext.createBiquadFilter();
+            
+            // Configure oscillator
+            oscillator.type = 'sawtooth'; // Synth-like waveform
+            oscillator.frequency.value = frequency;
+            
+            // Apply filter
+            filterNode.type = 'lowpass';
+            filterNode.frequency.value = 2000 * (paramValues.filter / 100);
+            filterNode.Q.value = 5;
+            
+            // Calculate envelope timing for synth
+            const attackTime = paramValues.attack / 1000;
+            const decayTime = paramValues.decay / 1000;
+            const releaseTime = paramValues.release / 1000;
+            const sustainLevel = 0.4;
+            const peakVolume = (paramValues.volume / 100) * 0.3; // Lower volume for synth
+            const sustainVolume = peakVolume * sustainLevel;
+            
+            const now = audioContext.currentTime;
+            
+            // ADSR Envelope for synth
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(peakVolume, now + attackTime);
+            gainNode.gain.linearRampToValueAtTime(sustainVolume, now + attackTime + decayTime);
+            
+            const sustainTime = Math.max(0.1, duration - attackTime - decayTime - releaseTime);
+            gainNode.gain.setValueAtTime(sustainVolume, now + attackTime + decayTime + sustainTime);
+            gainNode.gain.linearRampToValueAtTime(0, now + attackTime + decayTime + sustainTime + releaseTime);
+            
+            // Connect audio graph
+            oscillator.connect(filterNode);
+            filterNode.connect(gainNode);
+            gainNode.connect(masterGain);
+            
+            // Start and stop oscillator
+            oscillator.start(now);
+            oscillator.stop(now + duration);
+            
+            console.log('🎵 Playing synth note:', note, 'freq:', frequency + 'Hz', 'duration:', duration + 's');
+            
+            return oscillator;
+        }
+
+        // ===== UNIFIED PLAYBACK =====
+        async function playTrackSound(trackIndex, isManualTrigger = false) {
+            const config = trackConfig[trackIndex];
+            if (!config) return;
+            
+            console.log(`🎵 playTrackSound: Track ${trackIndex + 1}, Manual: ${isManualTrigger}, Recording: ${sequencerIsRecording}`);
+            
+            // Only record if it's a manual trigger AND recording is enabled
+            if (isManualTrigger && sequencerIsRecording) {
+                console.log(`📝 Recording manual trigger for track ${trackIndex + 1}`);
+                if (config.engine === 'synth') {
+                    recordEvent(trackIndex, 127, config.assignment); // Pass the note name
+                } else {
+                    recordEvent(trackIndex, 127); // Sample tracks don't need note info
+                }
+            } else if (isManualTrigger) {
+                console.log(`🎵 Manual trigger but recording disabled for track ${trackIndex + 1}`);
+            } else {
+                console.log(`🎵 Sequencer playback (no recording) for track ${trackIndex + 1}`);
+            }
+            
+            if (config.engine === 'sampler') {
+                // Map assignment to sample name
+                const sampleMap = {
+                    'kick': 'kick',
+                    'snare': 'snare',
+                    'hihat': 'hihat_closed', 
+                    'clap': 'clap',
+                    'tom': 'tom',
+                    'crash': 'crash'
+                };
+                const sampleName = sampleMap[config.assignment];
+                if (sampleName && sampleBuffers[sampleName]) {
+                    return await playSampleBuffer(sampleName);
+                }
+            } else if (config.engine === 'synth') {
+                return await playSynthNote(config.assignment, 0.8);
+            }
+        }
+
+        // ===== UI FUNCTIONS =====
+        function selectTrack(index) {
+            selectedTrack = index;
+            
+            // Update track items
+            document.querySelectorAll('.track-item').forEach((item, i) => {
+                item.classList.toggle('active', i === index);
+            });
+            
+            // Update track buttons (legacy compatibility)
+            document.querySelectorAll('.track-button').forEach((btn, i) => {
+                btn.classList.toggle('active', i === index);
+            });
+            
+            // Auto-select corresponding sample or synth note based on engine
+            const config = trackConfig[index];
+            if (config) {
+                if (config.engine === 'sampler') {
+                    // Map to actual sample names
+                    const sampleMap = {
+                        'kick': 'kick',
+                        'snare': 'snare', 
+                        'clap': 'clap',
+                        'tom': 'tom'
+                    };
+                    const sampleName = sampleMap[config.assignment];
+                    if (sampleName) {
+                        selectSampleByName(sampleName);
+                    }
+                } else if (config.engine === 'synth') {
+                    // Update synth settings for this track
+                    console.log('🎵 Track', index + 1, 'using SYNTH engine, note:', config.assignment);
+                }
+            }
+            
+            // Update step grid
+            updateStepGrid();
+            updateStepGridDisplay();
+            
+            console.log('🎛️ Selected track:', index + 1, 'Engine:', config?.engine, 'Assignment:', config?.assignment);
+        }
+
+        function toggleEngine(trackIndex) {
+            const config = trackConfig[trackIndex];
+            if (!config) return;
+            
+            // Toggle between sampler and synth
+            const newEngine = config.engine === 'sampler' ? 'synth' : 'sampler';
+            config.engine = newEngine;
+            
+            // Update assignments based on engine type
+            if (newEngine === 'synth') {
+                const synthAssignments = ['C3', 'D3', 'E3', 'F3', 'G3', 'A3'];
+                config.assignment = synthAssignments[trackIndex] || 'C3';
+                config.icon = '🎵';
+            } else {
+                const samplerAssignments = ['kick', 'snare', 'hihat', 'clap', 'tom', 'crash'];
+                config.assignment = samplerAssignments[trackIndex] || 'kick';
+                config.icon = '🥁';
+            }
+            
+            // Update UI
+            updateTrackDisplay(trackIndex);
+            
+            // If this track is currently selected, update the sample editor
+            if (selectedTrack === trackIndex) {
+                selectTrack(trackIndex);
+            }
+            
+            console.log('🔧 Track', trackIndex + 1, 'engine changed to:', newEngine, 'assignment:', config.assignment);
+        }
+
+        function updateTrackDisplay(trackIndex) {
+            const config = trackConfig[trackIndex];
+            if (!config) return;
+            
+            // Update engine display
+            const engineElement = document.getElementById(`engine-${trackIndex}`);
+            if (engineElement) {
+                engineElement.textContent = config.engine.toUpperCase();
+            }
+            
+            // Update assignment display
+            const assignmentElement = document.getElementById(`assignment-${trackIndex}`);
+            if (assignmentElement) {
+                assignmentElement.textContent = config.assignment;
+            }
+            
+            // Update engine buttons
+            const trackItem = document.querySelector(`[data-track="${trackIndex}"]`);
+            if (trackItem) {
+                const samplerBtn = trackItem.querySelector('[data-engine="sampler"]');
+                const synthBtn = trackItem.querySelector('[data-engine="synth"]');
+                
+                if (samplerBtn && synthBtn) {
+                    samplerBtn.classList.toggle('active', config.engine === 'sampler');
+                    synthBtn.classList.toggle('active', config.engine === 'synth');
+                }
+                
+                // Update track icon
+                const iconElement = trackItem.querySelector('.track-icon');
+                if (iconElement) {
+                    iconElement.textContent = config.icon;
+                }
+            }
+        }
+
+        function selectSample(element, sampleName) {
+            // Update sample selection
+            document.querySelectorAll('.sample-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            element.classList.add('active');
+            
+            currentSample = sampleName;
+            updateWaveform();
+            updateEnvelope();
+            updateSampleInfo();
+        }
+
+        function selectSampleByName(sampleName) {
+            const sampleElement = document.querySelector(`[data-sample="${sampleName}"]`);
+            if (sampleElement) {
+                selectSample(sampleElement, sampleName);
+            }
+        }
+
+        async function playSample() {
+            console.log('🎵 Playing track sound for selected track:', selectedTrack);
+            
+            // Use the track-based playback system
+            const source = await playTrackSound(selectedTrack, true); // Manual trigger from play button
+            
+            // Visual feedback
+            const btn = event.target;
+            const originalBg = btn.style.background;
+            btn.style.background = 'linear-gradient(45deg, #00ff00, #00cc00)';
+            btn.style.transform = 'scale(1.1)';
+            
+            setTimeout(() => {
+                btn.style.background = originalBg;
+                btn.style.transform = '';
+            }, 300);
+        }
+
+        function stopSample() {
+            console.log('⏹️ Stop requested');
+            
+            // Visual feedback
+            const btn = event.target;
+            const originalBg = btn.style.background;
+            btn.style.background = 'linear-gradient(45deg, #ff4444, #cc0000)';
+            btn.style.transform = 'scale(1.1)';
+            
+            setTimeout(() => {
+                btn.style.background = originalBg;
+                btn.style.transform = '';
+            }, 300);
+        }
+
+        function toggleLoop() {
+            isLooping = !isLooping;
+            const btn = document.getElementById('loopBtn');
+            
+            if (isLooping) {
+                btn.style.background = 'linear-gradient(45deg, #00ff00, #00cc00)';
+                btn.style.borderColor = '#00ff00';
+                console.log('🔄 Loop enabled');
+            } else {
+                btn.style.background = '';
+                btn.style.borderColor = '';
+                console.log('🔄 Loop disabled');
+            }
+        }
+
+        function adjustParam(param, delta) {
+            let newValue = paramValues[param];
+            
+            switch (param) {
+                case 'attack':
+                    newValue = Math.max(1, Math.min(100, newValue + delta * 5));
+                    document.getElementById('attackValue').textContent = newValue + 'ms';
+                    break;
+                case 'decay':
+                    newValue = Math.max(1, Math.min(200, newValue + delta * 10));
+                    document.getElementById('decayValue').textContent = newValue + 'ms';
+                    break;
+                case 'release':
+                    newValue = Math.max(10, Math.min(500, newValue + delta * 20));
+                    document.getElementById('releaseValue').textContent = newValue + 'ms';
+                    break;
+                case 'pitch':
+                    newValue = Math.max(-12, Math.min(12, newValue + delta));
+                    document.getElementById('pitchValue').textContent = newValue > 0 ? '+' + newValue : newValue.toString();
+                    break;
+                case 'start':
+                    newValue = Math.max(0, Math.min(90, newValue + delta * 5));
+                    document.getElementById('startValue').textContent = newValue + '%';
+                    break;
+                case 'end':
+                    newValue = Math.max(10, Math.min(100, newValue + delta * 5));
+                    document.getElementById('endValue').textContent = newValue + '%';
+                    break;
+                case 'filter':
+                    newValue = Math.max(10, Math.min(100, newValue + delta * 5));
+                    document.getElementById('filterValue').textContent = newValue + '%';
+                    break;
+                case 'volume':
+                    newValue = Math.max(0, Math.min(100, newValue + delta * 5));
+                    document.getElementById('volumeValue').textContent = newValue + '%';
+                    break;
+                case 'autotune':
+                    newValue = newValue + delta;
+                    const autotuneOptions = ['Off', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+                    newValue = Math.max(0, Math.min(autotuneOptions.length - 1, newValue));
+                    document.getElementById('autotuneValue').textContent = autotuneOptions[newValue];
+                    break;
+            }
+            
+            paramValues[param] = newValue;
+            
+            // Visual feedback - highlight the changed parameter
+            const paramElement = document.getElementById(param + 'Value');
+            if (paramElement) {
+                paramElement.style.background = 'rgba(0,255,255,0.3)';
+                paramElement.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    paramElement.style.background = '';
+                    paramElement.style.transform = '';
+                }, 200);
+            }
+            
+            // Update visualizations when relevant parameters change
+            if (param === 'start' || param === 'end') {
+                updateWaveform(); // Update waveform start/end markers
+            }
+            if (param === 'attack' || param === 'decay' || param === 'release') {
+                updateEnvelope(); // Update envelope shape
+            }
+            
+            console.log('🎛️ Parameter changed:', param, '=', newValue);
+        }
+
+        // ===== PAGE SYSTEM FUNCTIONS =====
+        function changePage(direction) {
+            console.log('🚀 changePage called with direction:', direction);
+            const newPage = Math.max(0, Math.min(maxPages - 1, currentPage + direction));
+            if (newPage !== currentPage) {
+                const oldPage = currentPage;
+                currentPage = newPage;
+                console.log(`📄 Changed from page ${oldPage + 1} to page ${currentPage + 1}/${maxPages}`);
+                console.log(`📊 Page offset changed from ${oldPage * stepsPerPage} to ${getCurrentPageOffset()}`);
+                
+                updatePageDisplay();
+                updateStepGrid();
+                updateStepGridDisplay();
+                
+                // Debug: Show step data for current track and page
+                const trackData = tracks[selectedTrack];
+                const pageOffset = getCurrentPageOffset();
+                const activeStepsOnPage = [];
+                for (let i = 0; i < stepsPerPage; i++) {
+                    const stepIndex = pageOffset + i;
+                    if (stepIndex < trackData.steps.length && trackData.steps[stepIndex].active) {
+                        activeStepsOnPage.push(i + 1);
+                    }
+                }
+                console.log(`🎯 Track ${selectedTrack + 1}, Page ${currentPage + 1}: Active steps [${activeStepsOnPage.join(', ')}]`);
+            }
+        }
+        
+        function changePatternLength(direction) {
+            const lengths = [16, 32, 48, 64];
+            let currentIndex = lengths.indexOf(patternLength);
+            if (currentIndex === -1) currentIndex = 0;
+            
+            const newIndex = Math.max(0, Math.min(lengths.length - 1, currentIndex + direction));
+            const newLength = lengths[newIndex];
+            
+            if (newLength !== patternLength) {
+                patternLength = newLength;
+                
+                // Update max pages based on new length
+                maxPages = Math.ceil(patternLength / stepsPerPage);
+                
+                // Adjust current page if it's now out of bounds
+                if (currentPage >= maxPages) {
+                    currentPage = maxPages - 1;
+                }
+                
+                // Reset current step if it's beyond new pattern length
+                if (currentStep >= patternLength) {
+                    currentStep = 0;
+                }
+                
+                updatePageDisplay();
+                updateLengthDisplay();
+                updateStepGridDisplay();
+                console.log(`📏 Pattern length changed to ${patternLength} steps (${maxPages} pages)`);
+            }
+        }
+        
+        function updatePageDisplay() {
+            const display = document.getElementById('pageDisplay');
+            if (display) {
+                display.textContent = `${currentPage + 1}/${maxPages}`;
+            }
+        }
+        
+        function updateLengthDisplay() {
+            const display = document.getElementById('lengthDisplay');
+            if (display) {
+                display.textContent = patternLength.toString();
+            }
+        }
+
+        // ===== RECORD SYSTEM =====
+        let sequencerIsRecording = false; // Renamed to avoid conflict
+        let quantizeEnabled = true;
+        let recordBuffer = []; // Store recorded events with timing
+        let recordStartTime = 0;
+
+        function toggleRecord() {
+            sequencerIsRecording = !sequencerIsRecording;
+            const recordButton = document.getElementById('recordButton');
+            
+            if (sequencerIsRecording) {
+                // Start recording
+                recordButton.style.background = 'linear-gradient(45deg, #ff6600, #ff4400)';
+                recordButton.style.boxShadow = '0 4px 16px rgba(255,102,0,0.6)';
+                recordButton.style.animation = 'pulse 1s infinite';
+                recordStartTime = audioContext ? audioContext.currentTime : Date.now() / 1000;
+                recordBuffer = [];
+                console.log('🔴 Recording started' + (quantizeEnabled ? ' (quantized)' : ' (unquantized)'));
+                
+                // If sequencer is not playing, start it
+                if (!sequencerPlaying) {
+                    toggleSequencer();
+                }
+            } else {
+                // Stop recording
+                recordButton.style.background = 'linear-gradient(45deg, #ff0000, #cc0000)';
+                recordButton.style.boxShadow = '0 4px 16px rgba(255,0,0,0.3)';
+                recordButton.style.animation = 'none';
+                console.log('⏹️ Recording stopped');
+                
+                // Process recorded events
+                processRecordedEvents();
+            }
+        }
+
+        function toggleQuantize() {
+            quantizeEnabled = !quantizeEnabled;
+            const toggle = document.getElementById('quantizeToggle');
+            const knob = toggle.querySelector('.toggle-knob');
+            const label = document.getElementById('quantizeLabel');
+            
+            if (quantizeEnabled) {
+                toggle.style.background = 'linear-gradient(45deg, #00ff00, #00cc00)';
+                knob.style.right = '1px';
+                knob.style.left = 'auto';
+                label.textContent = 'ON';
+                label.style.color = '#00ff00';
+            } else {
+                toggle.style.background = 'linear-gradient(45deg, #666, #444)';
+                knob.style.left = '1px';
+                knob.style.right = 'auto';
+                label.textContent = 'OFF';
+                label.style.color = '#999';
+            }
+            
+            console.log(`🎛️ Quantize ${quantizeEnabled ? 'enabled' : 'disabled'}`);
+        }
+
+        function recordEvent(trackIndex, velocity = 127, note = null) {
+            if (!sequencerIsRecording) {
+                console.log(`🚫 Recording disabled - not recording event for track ${trackIndex + 1}`);
+                return;
+            }
+            
+            console.log(`🎵 Recording event: Track ${trackIndex + 1}, Note: ${note || 'N/A'}, Velocity: ${velocity}`);
+            
+            const currentTime = audioContext ? audioContext.currentTime : Date.now() / 1000;
+            const relativeTime = currentTime - recordStartTime;
+            
+            // Calculate timing based on BPM and current sequencer position
+            // Match the sequencer timing: stepTime = 60000 / (bpm * 4) ms = 60 / (bpm * 4) seconds
+            const stepDuration = 60 / (bpm * 4); // 16th note duration in seconds (matches sequencer)
+            const stepPosition = relativeTime / stepDuration;
+            
+            let targetStep;
+            if (quantizeEnabled) {
+                // Snap to nearest 16th note
+                targetStep = Math.round(stepPosition) % patternLength;
+            } else {
+                // Record with exact timing (micro-timing)
+                targetStep = Math.floor(stepPosition) % patternLength;
+                const microTiming = (stepPosition % 1) - 0.5; // -0.5 to +0.5
+                
+                recordBuffer.push({
+                    track: trackIndex,
+                    step: targetStep,
+                    microTiming: microTiming,
+                    velocity: velocity,
+                    note: note,
+                    timestamp: relativeTime
+                });
+                return;
+            }
+            
+            // For quantized recording, directly set the step
+            if (targetStep >= 0 && targetStep < patternLength) {
+                const trackData = tracks[trackIndex];
+                trackData.steps[targetStep].active = true;
+                
+                // For synth tracks, also store the note/pitch
+                if (trackData.engine === 'synth' && note) {
+                    // Convert note name to pitch number for storage
+                    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+                    let pitch = 0;
+                    if (typeof note === 'string') {
+                        const noteName = note.replace(/[0-9]/g, '');
+                        const octave = parseInt(note.replace(/[^0-9]/g, '')) || 3;
+                        const noteIndex = noteNames.indexOf(noteName);
+                        if (noteIndex >= 0) {
+                            pitch = octave * 12 + noteIndex;
+                            trackData.steps[targetStep].pitch = pitch;
+                            trackData.steps[targetStep].frequency = keyboardNotes[note];
+                        }
+                    }
+                }
+                
+                recordBuffer.push({
+                    track: trackIndex,
+                    step: targetStep,
+                    velocity: velocity,
+                    note: note,
+                    timestamp: relativeTime
+                });
+                
+                console.log(`🎵 Recorded: Track ${trackIndex + 1}, Step ${targetStep + 1}, Engine: ${trackData.engine}`);
+                updateStepGrid();
+                updateStepGridDisplay();
+            }
+        }
+
+        function processRecordedEvents() {
+            if (recordBuffer.length === 0) return;
+            
+            console.log(`📝 Processing ${recordBuffer.length} recorded events`);
+            
+            // For unquantized events, apply micro-timing
+            recordBuffer.forEach(event => {
+                if (event.microTiming !== undefined) {
+                    const trackData = tracks[event.track];
+                    trackData.steps[event.step].active = true;
+                    trackData.steps[event.step].microTiming = event.microTiming;
+                    trackData.steps[event.step].velocity = event.velocity;
+                }
+            });
+            
+            updateStepGrid();
+            updateStepGridDisplay();
+            recordBuffer = [];
+        }
+        function changeBPM(delta) {
+            const newBPM = Math.max(60, Math.min(200, Math.round(bpm + delta)));
+            if (newBPM !== bpm) {
+                bpm = newBPM;
+                updateBPMDisplay();
+                
+                // If sequencer is playing, restart with new timing
+                if (sequencerPlaying) {
+                    console.log(`🎵 BPM changed to ${bpm} - restarting sequencer`);
+                    // Store current state
+                    const wasPlaying = sequencerPlaying;
+                    stopSequencer();
+                    if (wasPlaying) {
+                        sequencerPlaying = true; // Keep playing state
+                        startSequencer();
+                    }
+                }
+                
+                console.log(`🎵 BPM: ${bpm} (delta: ${delta})`);
+            }
+        }
+        
+        function changeTimeSignature(direction) {
+            const signatures = [
+                { numerator: 3, denominator: 4, name: "3/4" },
+                { numerator: 4, denominator: 4, name: "4/4" },
+                { numerator: 5, denominator: 4, name: "5/4" },
+                { numerator: 6, denominator: 8, name: "6/8" },
+                { numerator: 7, denominator: 8, name: "7/8" }
+            ];
+            
+            // Find current signature index
+            let currentIndex = signatures.findIndex(sig => 
+                sig.numerator === timeSignature.numerator && 
+                sig.denominator === timeSignature.denominator
+            );
+            
+            // If not found, default to 4/4 (index 1)
+            if (currentIndex === -1) currentIndex = 1;
+            
+            // Calculate new index with proper bounds checking
+            let newIndex = currentIndex + direction;
+            
+            // Wrap around the array bounds
+            if (newIndex < 0) {
+                newIndex = signatures.length - 1; // Go to last signature
+            } else if (newIndex >= signatures.length) {
+                newIndex = 0; // Go to first signature
+            }
+            
+            // Only change if it's actually different
+            if (newIndex !== currentIndex) {
+                timeSignature = {
+                    numerator: signatures[newIndex].numerator,
+                    denominator: signatures[newIndex].denominator
+                };
+                
+                // Recalculate steps per bar
+                const oldStepsPerBar = stepsPerBar;
+                stepsPerBar = calculateStepsPerBar();
+                
+                updateSignatureDisplay();
+                
+                // Resize arrays if step count changed
+                if (stepsPerBar !== oldStepsPerBar) {
+                    // Resize stepData arrays
+                    for (let trackIndex = 0; trackIndex < stepData.length; trackIndex++) {
+                        if (stepsPerBar > oldStepsPerBar) {
+                            // Add new steps
+                            const newSteps = Array(stepsPerBar - oldStepsPerBar).fill(false);
+                            stepData[trackIndex] = stepData[trackIndex].concat(newSteps);
+                        } else {
+                            // Remove excess steps
+                            stepData[trackIndex] = stepData[trackIndex].slice(0, stepsPerBar);
+                        }
+                    }
+                    
+                    // Resize tracks arrays
+                    for (let trackIndex = 0; trackIndex < tracks.length; trackIndex++) {
+                        if (stepsPerBar > oldStepsPerBar) {
+                            // Add new step objects
+                            const newSteps = Array(stepsPerBar - oldStepsPerBar).fill().map(() => ({ 
+                                active: false, pitch: null, frequency: null, params: {} 
+                            }));
+                            tracks[trackIndex].steps = tracks[trackIndex].steps.concat(newSteps);
+                        } else {
+                            // Remove excess steps
+                            tracks[trackIndex].steps = tracks[trackIndex].steps.slice(0, stepsPerBar);
+                        }
+                    }
+                    
+                    // Reset current step if it's beyond new range
+                    if (currentStep >= stepsPerBar) {
+                        currentStep = 0;
+                    }
+                    
+                    // Regenerate the step grid with new step count
+                    initStepGrid();
+                    updateStepGridDisplay();
+                }
+                
+                console.log(`🎵 Time Signature: ${signatures[newIndex].name} (${stepsPerBar} steps per bar)`);
+                console.log(`🎵 Array sizes updated - stepData: ${stepData[0].length}, tracks: ${tracks[0].steps.length}`);
+            }
+        }
+        
+        function updateBPMDisplay() {
+            const display = document.getElementById('bpmDisplay');
+            if (display) {
+                display.textContent = Math.round(bpm).toString();
+            }
+        }
+        
+        function updateSignatureDisplay() {
+            const display = document.getElementById('signatureDisplay');
+            if (display) {
+                display.textContent = `${timeSignature.numerator}/${timeSignature.denominator}`;
+            }
+        }
+
+        function toggleSequencer() {
+            console.log(`🎛️ Toggle sequencer - Current state: ${sequencerPlaying ? 'PLAYING' : 'STOPPED'}`);
+            
+            sequencerPlaying = !sequencerPlaying;
+            const button = document.getElementById('sequencerPlay');
+            
+            if (!button) {
+                console.error(`❌ Could not find sequencer play button!`);
+                return;
+            }
+            
+            if (sequencerPlaying) {
+                button.textContent = '⏸';
+                button.classList.add('playing');
+                startTime = audioContext ? audioContext.currentTime : Date.now() / 1000;
+                startSequencer();
+                console.log('▶️ Sequencer started - Audio initialized:', !!audioContext);
+            } else {
+                button.textContent = '▶';
+                button.classList.remove('playing');
+                stopSequencer();
+                console.log('⏸️ Sequencer stopped');
+            }
+        }
+
+        function startSequencer() {
+            const stepTime = 60000 / (bpm * 4); // 16th notes based on current BPM
+            
+            console.log(`🎵 Starting sequencer - BPM: ${bpm}, Step time: ${stepTime}ms, Time Sig: ${timeSignature.numerator}/${timeSignature.denominator}`);
+            
+            function playStep() {
+                if (!sequencerPlaying) {
+                    console.log(`⏹️ Sequencer stopped, ending playStep loop`);
+                    return;
+                }
+                
+                console.log(`🎵 Playing step ${currentStep + 1}`);
+                
+                // Update step grid display with current step
+                updateStepGridDisplay();
+                
+                // Debug: log current step and check for active steps
+                let activeSteps = [];
+                
+                // Play active steps for all tracks using unified playback
+                for (let track = 0; track < 6; track++) {
+                    // Bounds checking for currentStep
+                    if (currentStep >= 0 && currentStep < patternLength) {
+                        // Check both stepData (legacy) and tracks.steps (new)
+                        const hasStep = (stepData[track] && stepData[track][currentStep]) || 
+                                      (tracks[track].steps[currentStep] && tracks[track].steps[currentStep].active);
+                        
+                        if (hasStep) {
+                            activeSteps.push(track);
+                            playTrackSound(track, false); // Explicitly mark as sequencer playback, not manual trigger
+                        }
+                    }
+                }
+                
+                if (activeSteps.length > 0) {
+                    console.log(`🎵 Step ${currentStep + 1}: Playing tracks [${activeSteps.join(', ')}]`);
+                } else {
+                    console.log(`🔇 Step ${currentStep + 1}: No active tracks`);
+                }
+                
+                currentStep = (currentStep + 1) % patternLength;
+            }
+            
+            // Clear any existing interval
+            if (sequencerInterval) {
+                clearInterval(sequencerInterval);
+                console.log(`🧹 Cleared existing sequencer interval`);
+            }
+            
+            // Start new interval
+            sequencerInterval = setInterval(playStep, stepTime);
+            playStep(); // Play first step immediately
+            
+            console.log(`✅ Sequencer started with interval ID: ${sequencerInterval}`);
+        }
+
+        function stopSequencer() {
+            if (sequencerInterval) {
+                clearInterval(sequencerInterval);
+                sequencerInterval = null;
+            }
+            updateStepGridDisplay();
+            currentStep = 0;
+        }
+
+        function clearPattern() {
+            // Clear the entire pattern length, not just current page
+            for (let i = 0; i < patternLength; i++) {
+                stepData[selectedTrack][i] = false;
+                tracks[selectedTrack].steps[i] = { 
+                    active: false, pitch: null, frequency: null, params: {} 
+                };
+            }
+            
+            updateStepGrid();
+            updateStepGridDisplay();
+            console.log(`🧹 Pattern cleared for track ${selectedTrack + 1} (${patternLength} steps)`);
+        }
+
+        function toggleStep(stepIndex) {
+            // Bounds checking
+            if (stepIndex < 0 || stepIndex >= 64) { // Max 64 steps total
+                console.warn(`⚠️ Step index ${stepIndex} out of bounds (0-63)`);
+                return;
+            }
+            
+            console.log(`🎛️ Toggling step ${stepIndex + 1}/64 (page ${Math.floor(stepIndex / 16) + 1}, step ${(stepIndex % 16) + 1}) on track ${selectedTrack + 1}`);
+            
+            // Toggle in both data structures for compatibility
+            stepData[selectedTrack][stepIndex] = !stepData[selectedTrack][stepIndex];
+            tracks[selectedTrack].steps[stepIndex].active = stepData[selectedTrack][stepIndex];
+            
+            console.log(`📊 Step ${stepIndex + 1} is now: ${stepData[selectedTrack][stepIndex] ? 'ACTIVE' : 'INACTIVE'}`);
+            
+            updateStepGrid();
+            updateStepGridDisplay();
+            
+            // Play track sound for immediate feedback
+            if (stepData[selectedTrack][stepIndex]) {
+                playTrackSound(selectedTrack, true); // Manual trigger for immediate feedback
+            }
+        }
+
+        function updateStepGrid() {
+            const steps = document.querySelectorAll('.step');
+            const pageOffset = getCurrentPageOffset();
+            
+            steps.forEach((step, index) => {
+                const actualStepIndex = pageOffset + index;
+                const trackData = tracks[selectedTrack];
+                
+                // Always show step data for current page, but dim if beyond pattern length
+                if (actualStepIndex < 64 && trackData.steps[actualStepIndex]) { // Max 64 steps total
+                    step.classList.toggle('active', trackData.steps[actualStepIndex].active);
+                    
+                    // Dim steps beyond pattern length, but still allow interaction
+                    if (actualStepIndex >= patternLength) {
+                        step.style.opacity = '0.5';
+                        step.title = `Step ${actualStepIndex + 1} (beyond pattern length ${patternLength})`;
+                    } else {
+                        step.style.opacity = '1';
+                        step.title = `Step ${actualStepIndex + 1}`;
+                    }
+                } else {
+                    // Step is beyond max steps (64)
+                    step.classList.remove('active');
+                    step.style.opacity = '0.3';
+                    step.title = 'Invalid step';
+                }
+            });
+        }
+
+        // ===== WAVEFORM VISUALIZATION =====
+        function updateWaveform() {
+            const canvas = document.getElementById('waveformCanvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Set up high-DPI rendering
+            const rect = canvas.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            canvas.style.width = rect.width + 'px';
+            canvas.style.height = rect.height + 'px';
+            ctx.scale(dpr, dpr);
+            
+            // Enable crisp rendering
+            ctx.imageSmoothingEnabled = false;
+            ctx.textRenderingOptimization = 'optimizeSpeed';
+            
+            const width = rect.width;
+            const height = rect.height;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+            
+            // Generate waveform data
+            const waveformData = generateWaveformData(currentSample);
+            
+            // Draw waveform background area (inactive regions)
+            const startPos = (paramValues.start / 100) * width;
+            const endPos = (paramValues.end / 100) * width;
+            
+            ctx.fillStyle = 'rgba(255,255,255,0.1)';
+            ctx.fillRect(0, 0, startPos, height); // Before start
+            ctx.fillRect(endPos, 0, width - endPos, height); // After end
+            
+            // Draw active region background
+            ctx.fillStyle = 'rgba(0,255,255,0.1)';
+            ctx.fillRect(startPos, 0, endPos - startPos, height);
+            
+            // Draw waveform
+            ctx.strokeStyle = '#00ffff';
+            ctx.lineWidth = 2;
+            ctx.globalAlpha = 0.8;
+            ctx.beginPath();
+            
+            for (let i = 0; i < waveformData.length; i++) {
+                const x = (i / waveformData.length) * width;
+                const y = height / 2 + (waveformData[i] * height / 2);
+                
+                // Dim the waveform outside start/end points
+                if (x < startPos || x > endPos) {
+                    ctx.globalAlpha = 0.3;
+                } else {
+                    ctx.globalAlpha = 0.8;
+                }
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // Draw start/end markers with improved styling
+            ctx.save();
+            ctx.globalAlpha = 1;
+            ctx.lineWidth = 2.5;
+            ctx.lineCap = 'round';
+            
+            // Start marker with glow
+            ctx.strokeStyle = '#00ff00';
+            ctx.shadowColor = 'rgba(0,255,0,0.6)';
+            ctx.shadowBlur = 4;
+            ctx.beginPath();
+            ctx.moveTo(startPos, 2);
+            ctx.lineTo(startPos, height - 2);
+            ctx.stroke();
+            
+            // End marker with glow
+            ctx.strokeStyle = '#ff4444';
+            ctx.shadowColor = 'rgba(255,68,68,0.6)';
+            ctx.shadowBlur = 4;
+            ctx.beginPath();
+            ctx.moveTo(endPos, 2);
+            ctx.lineTo(endPos, height - 2);
+            ctx.stroke();
+            ctx.restore();
+            
+            // Add labels
+            ctx.save();
+            ctx.fillStyle = '#00ff00';
+            ctx.font = 'bold 9px -apple-system, system-ui, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.shadowColor = 'rgba(0,0,0,0.8)';
+            ctx.shadowOffsetX = 1;
+            ctx.shadowOffsetY = 1;
+            ctx.shadowBlur = 2;
+            ctx.fillText('START', startPos + 3, 12);
+            
+            ctx.fillStyle = '#ff4444';
+            ctx.textAlign = 'right';
+            ctx.fillText('END', endPos - 3, 12);
+            ctx.restore();
+            
+            // Add center line
+            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(0, height / 2);
+            ctx.lineTo(width, height / 2);
+            ctx.stroke();
+        }
+
+        // ===== ENVELOPE VISUALIZATION =====
+        function updateEnvelope() {
+            const canvas = document.getElementById('envelopeCanvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Set up high-DPI rendering
+            const rect = canvas.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            canvas.style.width = rect.width + 'px';
+            canvas.style.height = rect.height + 'px';
+            ctx.scale(dpr, dpr);
+            
+            // Enable crisp rendering
+            ctx.imageSmoothingEnabled = false;
+            ctx.textRenderingOptimization = 'optimizeSpeed';
+            
+            const width = rect.width;
+            const height = rect.height;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+            
+            // Calculate envelope timing (normalize to canvas width)
+            const attackTime = paramValues.attack;
+            const decayTime = paramValues.decay;
+            const releaseTime = paramValues.release;
+            const totalTime = attackTime + decayTime + 50 + releaseTime; // 50ms sustain for visualization
+            
+            const attackWidth = (attackTime / totalTime) * width;
+            const decayWidth = (decayTime / totalTime) * width;
+            const sustainWidth = (50 / totalTime) * width; // Fixed sustain for visual
+            const releaseWidth = (releaseTime / totalTime) * width;
+            
+            const peakHeight = height * 0.1; // 10% from top
+            const sustainHeight = height * 0.4; // 40% from top
+            const bottomHeight = height * 0.9; // 90% from top
+            
+            // Draw envelope curve with smooth styling
+            ctx.save();
+            ctx.strokeStyle = '#ffff00';
+            ctx.lineWidth = 2.5;
+            ctx.globalAlpha = 0.9;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.shadowColor = 'rgba(255,255,0,0.4)';
+            ctx.shadowBlur = 3;
+            ctx.beginPath();
+            
+            // Start at bottom
+            ctx.moveTo(0, bottomHeight);
+            
+            // Attack phase - rise to peak
+            ctx.lineTo(attackWidth, peakHeight);
+            
+            // Decay phase - fall to sustain
+            ctx.lineTo(attackWidth + decayWidth, sustainHeight);
+            
+            // Sustain phase - hold level
+            ctx.lineTo(attackWidth + decayWidth + sustainWidth, sustainHeight);
+            
+            // Release phase - fall to bottom
+            ctx.lineTo(attackWidth + decayWidth + sustainWidth + releaseWidth, bottomHeight);
+            
+            ctx.stroke();
+            ctx.restore();
+            
+            // Fill area under curve with gradient
+            ctx.save();
+            const gradient = ctx.createLinearGradient(0, peakHeight, 0, bottomHeight);
+            gradient.addColorStop(0, 'rgba(255,255,0,0.3)');
+            gradient.addColorStop(1, 'rgba(255,255,0,0.1)');
+            ctx.fillStyle = gradient;
+            ctx.globalAlpha = 0.6;
+            ctx.fill();
+            ctx.restore();
+            
+            // Draw phase labels with improved styling
+            ctx.save();
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = '#ffff00';
+            ctx.font = 'bold 8px -apple-system, system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.shadowColor = 'rgba(0,0,0,0.9)';
+            ctx.shadowOffsetX = 1;
+            ctx.shadowOffsetY = 1;
+            ctx.shadowBlur = 2;
+            
+            // Position labels at the center of each phase
+            ctx.fillText('A', attackWidth/2, height - 3);
+            ctx.fillText('D', attackWidth + decayWidth/2, height - 3);
+            ctx.fillText('S', attackWidth + decayWidth + sustainWidth/2, height - 3);
+            ctx.fillText('R', attackWidth + decayWidth + sustainWidth + releaseWidth/2, height - 3);
+            ctx.restore();
+            
+            // Draw subtle grid lines
+            ctx.save();
+            ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+            ctx.lineWidth = 0.5;
+            ctx.globalAlpha = 0.5;
+            
+            // Horizontal grid (amplitude levels)
+            for (let i = 1; i <= 3; i++) {
+                const y = (i / 4) * height;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+            
+            // Vertical grid (time divisions)
+            for (let i = 1; i <= 3; i++) {
+                const x = (i / 4) * width;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        function generateWaveformData(sampleType) {
+            const data = [];
+            const length = 200;
+            
+            switch (sampleType) {
+                case 'kick':
+                    for (let i = 0; i < length; i++) {
+                        const decay = Math.exp(-i / 30);
+                        const wave = Math.sin(i * 0.1) * decay;
+                        data.push(wave * 0.8);
+                    }
+                    break;
+                case 'snare':
+                    for (let i = 0; i < length; i++) {
+                        const decay = Math.exp(-i / 40);
+                        const noise = (Math.random() - 0.5) * 0.6;
+                        const tone = Math.sin(i * 0.3) * 0.4;
+                        data.push((noise + tone) * decay);
+                    }
+                    break;
+                case 'hihat_closed':
+                    for (let i = 0; i < length; i++) {
+                        const decay = Math.exp(-i / 20);
+                        const noise = (Math.random() - 0.5) * 0.8;
+                        data.push(noise * decay * 0.6);
+                    }
+                    break;
+                case 'hihat_open':
+                    for (let i = 0; i < length; i++) {
+                        const decay = Math.exp(-i / 60);
+                        const noise = (Math.random() - 0.5) * 0.7;
+                        const shimmer = Math.sin(i * 0.8) * 0.3;
+                        data.push((noise + shimmer) * decay);
+                    }
+                    break;
+                case 'clap':
+                    for (let i = 0; i < length; i++) {
+                        const decay = Math.exp(-i / 35);
+                        let clap = 0;
+                        if (i < 10 || (i > 20 && i < 30) || (i > 40 && i < 50)) {
+                            clap = (Math.random() - 0.5) * 0.9;
+                        } else {
+                            clap = (Math.random() - 0.5) * 0.3;
+                        }
+                        data.push(clap * decay);
+                    }
+                    break;
+                case 'tom':
+                    for (let i = 0; i < length; i++) {
+                        const decay = Math.exp(-i / 50);
+                        const tone = Math.sin(i * 0.15) * 0.7;
+                        const noise = (Math.random() - 0.5) * 0.2;
+                        data.push((tone + noise) * decay);
+                    }
+                    break;
+                default:
+                    for (let i = 0; i < length; i++) {
+                        data.push(Math.sin(i * 0.1) * Math.exp(-i / 50));
+                    }
+            }
+            return data;
+        }
+
+        function updateSampleInfo() {
+            const durations = {
+                kick: '1.0s',
+                snare: '0.3s',
+                hihat_closed: '0.1s',
+                hihat_open: '0.8s',
+                clap: '0.2s',
+                tom: '0.8s'
+            };
+            
+            const info = document.getElementById('sampleInfo');
+            const displayName = currentSample.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+            info.textContent = `${displayName}.wav - ${durations[currentSample] || '1.0s'}`;
+        }
+
+        function initSamplePreviews() {
+            document.querySelectorAll('.sample-item').forEach(item => {
+                const canvas = item.querySelector('.sample-preview');
+                const sampleName = item.getAttribute('data-sample');
+                drawMiniWaveform(canvas, sampleName);
+            });
+        }
+
+        function drawMiniWaveform(canvas, sampleType) {
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const data = generateWaveformData(sampleType).slice(0, 30);
+            
+            ctx.strokeStyle = '#00ffff';
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = 0.6;
+            ctx.beginPath();
+            
+            for (let i = 0; i < data.length; i++) {
+                const x = (i / data.length) * width;
+                const y = height / 2 + (data[i] * height / 2);
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+        }
+
+        // ===== PIANO KEYBOARD =====
+        let currentOctave = 3;  // Start at middle octave
+        let recordMode = false;
+        let pressedKeys = new Set();
+        
+        const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const whiteKeys = [0, 2, 4, 5, 7, 9, 11]; // C, D, E, F, G, A, B
+        const blackKeys = [1, 3, 6, 8, 10]; // C#, D#, F#, G#, A#
+        
+        function generatePianoKeys() {
+            const keyboard = document.getElementById('pianoKeyboard');
+            keyboard.innerHTML = '';
+            
+            // First, create all white keys in order
+            const whiteKeyNotes = [0, 2, 4, 5, 7, 9, 11]; // C, D, E, F, G, A, B
+            whiteKeyNotes.forEach((noteIndex) => {
+                const note = noteNames[noteIndex];
+                const key = document.createElement('div');
+                key.className = 'piano-key white';
+                key.dataset.note = noteIndex;
+                key.dataset.noteName = note;
+                
+                // Add note name for white keys
+                key.innerHTML = `<span style="padding: 1px; font-size: 4px; opacity: 0.7;">${note}</span>`;
+                
+                // Event listeners
+                addKeyEventListeners(key, noteIndex, note);
+                keyboard.appendChild(key);
+            });
+            
+            // Then, create black keys positioned on top
+            const blackKeyNotes = [1, 3, 6, 8, 10]; // C#, D#, F#, G#, A#
+            blackKeyNotes.forEach((noteIndex) => {
+                const note = noteNames[noteIndex];
+                const key = document.createElement('div');
+                key.className = 'piano-key black';
+                key.dataset.note = noteIndex;
+                key.dataset.noteName = note;
+                
+                // Event listeners
+                addKeyEventListeners(key, noteIndex, note);
+                keyboard.appendChild(key);
+            });
+            
+            updateOctaveDisplay();
+        }
+        
+        function addKeyEventListeners(key, noteIndex, note) {
+            // Mouse events
+            key.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                playPianoNote(noteIndex, note);
+            });
+            
+            key.addEventListener('mouseup', (e) => {
+                e.preventDefault();
+                stopPianoNote(noteIndex);
+            });
+            
+            key.addEventListener('mouseleave', (e) => {
+                stopPianoNote(noteIndex);
+            });
+            
+            // Touch support
+            key.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                playPianoNote(noteIndex, note);
+            });
+            
+            key.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                stopPianoNote(noteIndex);
+            });
+        }
+        
+        async function playPianoNote(noteIndex, noteName) {
+            const midiNote = (currentOctave * 12) + noteIndex + 12; // +12 for C0 = MIDI 12
+            const frequency = 440 * Math.pow(2, (midiNote - 69) / 12); // A4 = 440Hz = MIDI 69
+            
+            // Visual feedback
+            const key = document.querySelector(`.piano-key[data-note="${noteIndex}"]`);
+            if (key) {
+                key.classList.add('pressed');
+                pressedKeys.add(noteIndex);
+            }
+            
+            // Audio playback - auto-initialize if needed
+            if (!audioInitialized) {
+                try {
+                    await initAudio();
+                } catch (err) {
+                    console.warn('⚠️ Could not initialize audio:', err);
+                    return;
+                }
+            }
+            
+            if (audioInitialized) {
+                if (sequencerState.isPlaying && recordMode) {
+                    // Real-time recording mode
+                    recordNoteToStep(midiNote, frequency);
+                } else if (selectedStepForPitch >= 0) {
+                    // Step pitch entry mode
+                    assignPitchToStep(selectedStepForPitch, midiNote, frequency);
+                    selectedStepForPitch = -1;
+                    updateStepGridDisplay();
+                } else {
+                    // Free play mode - use current track's engine
+                    playTrackNoteFromKeyboard(frequency, midiNote, noteName);
+                }
+            }
+            
+            console.log(`🎹 Playing: ${noteName}${currentOctave} (MIDI: ${midiNote}, Freq: ${frequency.toFixed(1)}Hz) on Track ${selectedTrack + 1}`);
+        }
+        
+        async function playTrackNoteFromKeyboard(frequency, midiNote, noteName) {
+            const config = trackConfig[selectedTrack];
+            if (!config) {
+                console.log(`❌ No config found for track ${selectedTrack}`);
+                return;
+            }
+            
+            console.log(`🎛️ Track ${selectedTrack + 1} config:`, config);
+            
+            if (config.engine === 'sampler') {
+                // For sampler tracks, just play the assigned sample
+                // (samples don't change pitch from keyboard input)
+                await playTrackSound(selectedTrack, true); // Manual trigger from keyboard
+                console.log(`🥁 Sampler track ${selectedTrack + 1}: Playing ${config.assignment} sample`);
+            } else if (config.engine === 'synth') {
+                // For synth tracks, play the calculated frequency using a simpler approach
+                console.log(`🎵 Attempting to play synth note: ${noteName} at ${frequency.toFixed(1)}Hz on track ${selectedTrack + 1}`);
+                await playSimpleSynthNote(frequency);
+                console.log(`🎵 Synth track ${selectedTrack + 1}: Playing ${noteName} at ${frequency.toFixed(1)}Hz`);
+            } else {
+                console.log(`⚠️ Unknown engine type: ${config.engine} for track ${selectedTrack + 1}`);
+            }
+        }
+        
+        async function playSimpleSynthNote(frequency, duration = 0.5) {
+            if (!audioInitialized) {
+                await initAudio();
+            }
+            
+            if (!audioContext) {
+                console.log('⚠️ Audio context not ready for synth');
+                return;
+            }
+            
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+            }
+            
+            console.log(`🎵 Creating simple synth note at ${frequency.toFixed(1)}Hz`);
+            
+            try {
+                // Create a simple oscillator setup
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                // Configure oscillator
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.value = frequency;
+                
+                // Connect directly to destination
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                // Simple envelope
+                const now = audioContext.currentTime;
+                const peakVolume = 0.2; // Conservative volume
+                
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(peakVolume, now + 0.01); // Quick attack
+                gainNode.gain.linearRampToValueAtTime(peakVolume * 0.7, now + 0.1); // Quick decay
+                gainNode.gain.setValueAtTime(peakVolume * 0.7, now + duration - 0.1); // Sustain
+                gainNode.gain.linearRampToValueAtTime(0, now + duration); // Release
+                
+                console.log(`🎵 Starting simple synth oscillator`);
+                
+                // Start and stop
+                oscillator.start(now);
+                oscillator.stop(now + duration);
+                
+                return { oscillator, gainNode };
+            } catch (error) {
+                console.error('❌ Error creating synth note:', error);
+            }
+        }
+        
+        async function playSynthNoteByFrequency(frequency, duration = 0.5) {
+            if (!audioInitialized) {
+                await initAudio();
+            }
+            
+            if (!audioContext) {
+                console.log('⚠️ Audio context not ready for synth');
+                return;
+            }
+            
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+            }
+            
+            console.log(`🎵 Creating synth note at ${frequency.toFixed(1)}Hz`);
+            
+            // Create oscillator for synth tone with specific frequency
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            const filterNode = audioContext.createBiquadFilter();
+            
+            // Configure oscillator
+            oscillator.type = 'sawtooth'; // Synth-like waveform
+            oscillator.frequency.value = frequency;
+            
+            // Apply filter (use safe defaults if paramValues not available)
+            filterNode.type = 'lowpass';
+            filterNode.frequency.value = 2000 * ((typeof paramValues !== 'undefined' ? paramValues.filter : 50) / 100);
+            filterNode.Q.value = 5;
+            
+            // Calculate envelope timing for synth (use safe defaults)
+            const attackTime = (typeof paramValues !== 'undefined' ? paramValues.attack : 10) / 1000;
+            const decayTime = (typeof paramValues !== 'undefined' ? paramValues.decay : 300) / 1000;
+            const sustainLevel = (typeof paramValues !== 'undefined' ? paramValues.sustain : 40) / 100;
+            const releaseTime = (typeof paramValues !== 'undefined' ? paramValues.release : 200) / 1000;
+            const peakVolume = 0.3; // Fixed volume for keyboard
+            
+            // Connect nodes
+            oscillator.connect(filterNode);
+            filterNode.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // ADSR envelope
+            const now = audioContext.currentTime;
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(peakVolume, now + attackTime);
+            gainNode.gain.linearRampToValueAtTime(peakVolume * sustainLevel, now + attackTime + decayTime);
+            gainNode.gain.setValueAtTime(peakVolume * sustainLevel, now + duration - releaseTime);
+            gainNode.gain.linearRampToValueAtTime(0, now + duration);
+            
+            console.log(`🎵 Starting synth oscillator - Attack: ${attackTime}s, Peak: ${peakVolume}`);
+            
+            // Start and stop oscillator
+            oscillator.start(now);
+            oscillator.stop(now + duration);
+            
+            return { oscillator, gainNode };
+        }
+        
+        function stopPianoNote(noteIndex) {
+            const key = document.querySelector(`.piano-key[data-note="${noteIndex}"]`);
+            if (key) {
+                key.classList.remove('pressed');
+                pressedKeys.delete(noteIndex);
+            }
+        }
+        
+        function playNoteFrequency(frequency) {
+            if (!audioContext) return;
+            
+            // Create oscillator for synth preview
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+            
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.01);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.5);
+        }
+        
+        function recordNoteToStep(midiNote, frequency) {
+            if (!sequencerState.isPlaying) return;
+            
+            const currentStep = Math.floor((audioContext.currentTime - sequencerState.startTime) / sequencerState.stepDuration) % patternLength;
+            
+            // Record to currently selected track
+            if (tracks[selectedTrack].engine === 'synth') {
+                tracks[selectedTrack].steps[currentStep] = {
+                    active: true,
+                    pitch: midiNote,
+                    frequency: frequency
+                };
+                
+                updateStepGridDisplay();
+                console.log(`🔴 Recorded note ${midiNote} to step ${currentStep} on track ${selectedTrack}`);
+            }
+        }
+        
+        function assignPitchToStep(stepIndex, midiNote, frequency) {
+            if (tracks[selectedTrack].engine === 'synth') {
+                if (!tracks[selectedTrack].steps[stepIndex]) {
+                    tracks[selectedTrack].steps[stepIndex] = { active: false };
+                }
+                tracks[selectedTrack].steps[stepIndex].pitch = midiNote;
+                tracks[selectedTrack].steps[stepIndex].frequency = frequency;
+                
+                // Also activate the step if it wasn't already
+                tracks[selectedTrack].steps[stepIndex].active = true;
+                
+                console.log(`🎯 Assigned pitch ${midiNote} to step ${stepIndex} on track ${selectedTrack}`);
+            }
+        }
+        
+        function transposeKeyboard(semitones) {
+            currentOctave = Math.max(0, Math.min(8, currentOctave + (semitones / 12)));
+            updateOctaveDisplay();
+            console.log(`🎹 Transposed to octave ${currentOctave}`);
+        }
+        
+        function updateOctaveDisplay() {
+            const display = document.getElementById('octaveDisplay');
+            if (display) {
+                display.textContent = `C${currentOctave}`;
+            }
+        }
+        
+        function toggleRecordMode() {
+            recordMode = !recordMode;
+            const btn = document.querySelector('[onclick*="toggleRecordMode"]');
+            if (btn) {
+                btn.style.background = recordMode ? 'rgba(255,0,0,0.3)' : '';
+                btn.style.color = recordMode ? '#ff6666' : '';
+            }
+            console.log(`🔴 Record mode: ${recordMode ? 'ON' : 'OFF'}`);
+        }
+        
+        function selectStepForEdit(stepIndex) {
+            selectedStepForEdit = selectedStepForEdit === stepIndex ? -1 : stepIndex;
+            updateStepGridDisplay();
+            
+            if (selectedStepForEdit >= 0) {
+                console.log(`🎛️ Selected step ${selectedStepForEdit + 1} for parameter editing`);
+                // Show parameter controls for this step
+                showStepParameters(selectedStepForEdit);
+            } else {
+                console.log('🎛️ Deselected step for parameter editing');
+                hideStepParameters();
+            }
+        }
+        
+        function selectStepForPitch(stepIndex) {
+            selectedStepForPitch = selectedStepForPitch === stepIndex ? -1 : stepIndex;
+            updateStepGridDisplay();
+            console.log(`🎯 Selected step ${stepIndex + 1} for pitch entry`);
+        }
+        
+        function showStepParameters(stepIndex) {
+            // Create or show a parameter panel for the selected step
+            let paramPanel = document.getElementById('stepParamPanel');
+            if (!paramPanel) {
+                paramPanel = document.createElement('div');
+                paramPanel.id = 'stepParamPanel';
+                paramPanel.className = 'step-param-panel';
+                paramPanel.innerHTML = `
+                    <div class="param-header">
+                        <span id="stepParamTitle">Step ${stepIndex + 1} Parameters</span>
+                        <button onclick="hideStepParameters()" style="background: none; border: none; color: #fff; cursor: pointer;">✕</button>
+                    </div>
+                    <div class="param-controls">
+                        <div class="param-row">
+                            <label>Volume:</label>
+                            <input type="range" id="stepVolume" min="0" max="100" value="100" onchange="updateStepParam('volume', this.value)">
+                            <span id="stepVolumeValue">100%</span>
+                        </div>
+                        <div class="param-row">
+                            <label>Pan:</label>
+                            <input type="range" id="stepPan" min="-50" max="50" value="0" onchange="updateStepParam('pan', this.value)">
+                            <span id="stepPanValue">0</span>
+                        </div>
+                        <div class="param-row">
+                            <label>Filter:</label>
+                            <input type="range" id="stepFilter" min="0" max="100" value="50" onchange="updateStepParam('filter', this.value)">
+                            <span id="stepFilterValue">50%</span>
+                        </div>
+                        <div class="param-row">
+                            <label>Pitch:</label>
+                            <input type="range" id="stepPitch" min="-24" max="24" value="0" onchange="updateStepParam('pitch', this.value)">
+                            <span id="stepPitchValue">0</span>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(paramPanel);
+            }
+            
+            document.getElementById('stepParamTitle').textContent = `Step ${stepIndex + 1} Parameters`;
+            paramPanel.style.display = 'block';
+            
+            // Load current parameter values for this step
+            loadStepParameters(stepIndex);
+        }
+        
+        function hideStepParameters() {
+            const paramPanel = document.getElementById('stepParamPanel');
+            if (paramPanel) {
+                paramPanel.style.display = 'none';
+            }
+            selectedStepForEdit = -1;
+            updateStepGridDisplay();
+        }
+        
+        function updateStepParam(paramName, value) {
+            if (selectedStepForEdit < 0) return;
+            
+            // Initialize step parameters if they don't exist
+            if (!stepData[selectedTrack][selectedStepForEdit]) {
+                stepData[selectedTrack][selectedStepForEdit] = {};
+            }
+            if (typeof stepData[selectedTrack][selectedStepForEdit] === 'boolean') {
+                stepData[selectedTrack][selectedStepForEdit] = { active: stepData[selectedTrack][selectedStepForEdit] };
+            }
+            if (!stepData[selectedTrack][selectedStepForEdit].params) {
+                stepData[selectedTrack][selectedStepForEdit].params = {};
+            }
+            
+            // Update parameter
+            stepData[selectedTrack][selectedStepForEdit].params[paramName] = parseFloat(value);
+            
+            // Update display
+            const valueSpan = document.getElementById(`step${paramName.charAt(0).toUpperCase() + paramName.slice(1)}Value`);
+            if (valueSpan) {
+                if (paramName === 'volume') {
+                    valueSpan.textContent = Math.round(value) + '%';
+                } else if (paramName === 'pan') {
+                    valueSpan.textContent = value > 0 ? 'R' + value : value < 0 ? 'L' + Math.abs(value) : '0';
+                } else {
+                    valueSpan.textContent = Math.round(value);
+                }
+            }
+            
+            updateStepGridDisplay();
+            console.log(`🎛️ Step ${selectedStepForEdit + 1} ${paramName}: ${value}`);
+        }
+        
+        function loadStepParameters(stepIndex) {
+            const stepObj = stepData[selectedTrack][stepIndex];
+            const params = (stepObj && stepObj.params) || {};
+            
+            document.getElementById('stepVolume').value = params.volume || 100;
+            document.getElementById('stepPan').value = params.pan || 0;
+            document.getElementById('stepFilter').value = params.filter || 50;
+            document.getElementById('stepPitch').value = params.pitch || 0;
+            
+            updateStepParam('volume', params.volume || 100);
+            updateStepParam('pan', params.pan || 0);
+            updateStepParam('filter', params.filter || 50);
+            updateStepParam('pitch', params.pitch || 0);
+        }
+        
+        function selectStepForPitch(stepIndex) {
+            selectedStepForPitch = selectedStepForPitch === stepIndex ? -1 : stepIndex;
+            updateStepGridDisplay();
+            console.log(`🎯 Selected step ${stepIndex + 1} for pitch entry`);
+        }
+        
+        function updateStepGridDisplay() {
+            const steps = document.querySelectorAll('.step');
+            const pageOffset = getCurrentPageOffset();
+            
+            steps.forEach((step, index) => {
+                const actualStepIndex = pageOffset + index;
+                const trackData = tracks[selectedTrack];
+                
+                // Reset classes
+                step.classList.remove('active', 'current', 'has-pitch', 'selected-for-pitch', 'selected-for-edit', 'has-params');
+                
+                // Always show data for current page, but dim if beyond pattern length
+                if (actualStepIndex < 64) { // Max 64 steps total
+                    const stepData = trackData.steps[actualStepIndex];
+                    
+                    // Dim steps beyond pattern length, but still show their data
+                    if (actualStepIndex >= patternLength) {
+                        step.style.opacity = '0.5';
+                    } else {
+                        step.style.opacity = '1';
+                    }
+                    
+                    // Active step
+                    if (stepData && stepData.active) {
+                        step.classList.add('active');
+                    }
+                    
+                    // Current playing step (only highlight if within pattern length)
+                    if (sequencerPlaying && actualStepIndex === currentStep && actualStepIndex < patternLength) {
+                        step.classList.add('current');
+                    }
+                    
+                    // Has pitch data (for synth tracks)
+                    if (trackData.engine === 'synth' && stepData && stepData.pitch) {
+                        step.classList.add('has-pitch');
+                        const noteName = noteNames[stepData.pitch % 12];
+                        const octave = Math.floor(stepData.pitch / 12) - 1;
+                        step.title = `${noteName}${octave}`;
+                    }
+                    
+                    // Selected for pitch entry
+                    if (actualStepIndex === selectedStepForPitch) {
+                        step.classList.add('selected-for-pitch');
+                    }
+                    
+                    // Selected for parameter editing
+                    if (actualStepIndex === selectedStepForEdit) {
+                        step.classList.add('selected-for-edit');
+                    }
+                    
+                    // Has parameter locks
+                    if (stepData && stepData.params && Object.keys(stepData.params).length > 0) {
+                        step.classList.add('has-params');
+                    }
+                } else {
+                    // Step is beyond max steps (64)
+                    step.style.opacity = '0.3';
+                }
+            });
+        }
+
+        // ===== MIDI SUPPORT =====
+        let midiAccess = null;
+        
+        function initMIDI() {
+            if (navigator.requestMIDIAccess) {
+                navigator.requestMIDIAccess()
+                    .then(onMIDISuccess)
+                    .catch(onMIDIFailure);
+            } else {
+                console.log('🎹 MIDI not supported in this browser');
+            }
+        }
+        
+        function onMIDISuccess(access) {
+            midiAccess = access;
+            console.log('🎹 MIDI access successful');
+            
+            // Listen for MIDI input
+            for (let input of midiAccess.inputs.values()) {
+                input.onmidimessage = handleMIDIMessage;
+                console.log(`🎹 Connected to MIDI input: ${input.name}`);
+            }
+        }
+        
+        function onMIDIFailure() {
+            console.log('🎹 Failed to get MIDI access');
+        }
+        
+        function handleMIDIMessage(message) {
+            const [command, note, velocity] = message.data;
+            
+            // Note on (144) or note off (128)
+            if (command === 144 && velocity > 0) {
+                // Note on
+                const noteIndex = note % 12;
+                const octave = Math.floor(note / 12) - 1;
+                const frequency = 440 * Math.pow(2, (note - 69) / 12);
+                
+                // Update current octave to match MIDI input
+                currentOctave = octave;
+                updateOctaveDisplay();
+                
+                // Play the note
+                playPianoNote(noteIndex, noteNames[noteIndex]);
+                
+            } else if (command === 128 || (command === 144 && velocity === 0)) {
+                // Note off
+                const noteIndex = note % 12;
+                stopPianoNote(noteIndex);
+            }
+        }
+
+        // ===== KEYBOARD SHORTCUTS FOR PIANO =====
+        const keyboardToNote = {
+            'a': 0,  // C
+            'w': 1,  // C#
+            's': 2,  // D
+            'e': 3,  // D#
+            'd': 4,  // E
+            'f': 5,  // F
+            't': 6,  // F#
+            'g': 7,  // G
+            'y': 8,  // G#
+            'h': 9,  // A
+            'u': 10, // A#
+            'j': 11, // B
+        };
+        
+        function handleKeyboardInput(event) {
+            const key = event.key.toLowerCase();
+            
+            if (keyboardToNote.hasOwnProperty(key)) {
+                event.preventDefault();
+                
+                if (event.type === 'keydown' && !event.repeat) {
+                    playPianoNote(keyboardToNote[key], noteNames[keyboardToNote[key]]);
+                } else if (event.type === 'keyup') {
+                    stopPianoNote(keyboardToNote[key]);
+                }
+            }
+            
+            // Octave controls
+            if (event.type === 'keydown') {
+                if (key === 'z') {
+                    transposeKeyboard(-12);
+                } else if (key === 'x') {
+                    transposeKeyboard(12);
+                }
+            }
+        }
+
+        // ===== INITIALIZATION =====
+        function initStepGrid() {
+            const stepGrid = document.getElementById('stepGrid');
+            stepGrid.innerHTML = '';
+            
+            // Always show 16 steps (one page)
+            for (let i = 0; i < stepsPerPage; i++) {
+                const step = document.createElement('div');
+                step.className = 'step';
+                step.dataset.stepIndex = i;
+                step.dataset.pageStep = i; // Visual step index (0-15)
+                
+                // Simple click handler first - get basic functionality working
+                step.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const actualStepIndex = getCurrentPageOffset() + i;
+                    console.log(`🎯 Clicked step ${i + 1}/16 (actual step ${actualStepIndex + 1}/${patternLength}) on page ${currentPage + 1}`);
+                    toggleStep(actualStepIndex);
+                });
+                
+                stepGrid.appendChild(step);
+            }
+            
+            console.log(`✅ Step grid initialized with ${stepsPerPage} visible steps for page ${currentPage + 1}/${maxPages}`);
+        }
+        
+        function handleStepStart(event, stepIndex) {
+            console.log(`🎯 Step ${stepIndex + 1} touch START`);
+            stepTouchStartTime = Date.now();
+            
+            // Clear any existing hold timeout
+            if (holdTimeout) {
+                clearTimeout(holdTimeout);
+            }
+            
+            // Add visual feedback immediately
+            const step = event.target;
+            step.classList.add('touching');
+            
+            // Start hold timer for parameter editing
+            holdTimeout = setTimeout(() => {
+                console.log(`⏱️ Hold timer fired for step ${stepIndex + 1}`);
+                
+                // Hold detected - open parameter editor
+                selectStepForEdit(stepIndex);
+                
+                // Add visual feedback for hold
+                step.classList.add('holding');
+                step.classList.remove('touching');
+                
+                // Haptic feedback if available
+                if (navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
+                
+                console.log(`👆 Hold detected on step ${stepIndex + 1} - Opening parameter editor`);
+            }, HOLD_DURATION);
+        }
+        
+        function handleStepEnd(event, stepIndex) {
+            const touchDuration = Date.now() - stepTouchStartTime;
+            const currentTime = Date.now();
+            
+            console.log(`🎯 Step ${stepIndex + 1} touch END (duration: ${touchDuration}ms)`);
+            
+            // Clear hold timeout since touch ended
+            if (holdTimeout) {
+                clearTimeout(holdTimeout);
+                holdTimeout = null;
+            }
+            
+            // Remove visual feedback
+            const step = event.target;
+            step.classList.remove('holding', 'touching');
+            
+            // If it was a hold (>600ms), don't do anything else
+            if (touchDuration >= HOLD_DURATION) {
+                console.log(`⏱️ Was a hold - ignoring tap logic`);
+                return;
+            }
+            
+            // Check for double tap
+            if (lastTappedStep === stepIndex && 
+                (currentTime - lastTapTime) < DOUBLE_TAP_THRESHOLD) {
+                
+                console.log(`👆👆 Double tap detected on step ${stepIndex + 1}`);
+                
+                // Double tap detected - select for pitch entry (synth tracks only)
+                if (tracks[selectedTrack].engine === 'synth') {
+                    selectStepForPitch(stepIndex);
+                    console.log(`🎵 Synth track - selecting for pitch entry`);
+                } else {
+                    console.log(`🥁 Sampler track - double tap ignored`);
+                }
+                
+                // Reset double tap tracking
+                lastTappedStep = -1;
+                lastTapTime = 0;
+                
+            } else {
+                console.log(`👆 Single tap on step ${stepIndex + 1}`);
+                
+                // Single tap - toggle step on/off
+                toggleStep(stepIndex);
+                
+                // Track for double tap detection
+                lastTappedStep = stepIndex;
+                lastTapTime = currentTime;
+            }
+        }
+        
+        function handleStepCancel(event, stepIndex) {
+            console.log(`🚫 Step ${stepIndex + 1} touch CANCELLED`);
+            
+            // Clear hold timeout
+            if (holdTimeout) {
+                clearTimeout(holdTimeout);
+                holdTimeout = null;
+            }
+            
+            // Remove visual feedback
+            const step = event.target;
+            step.classList.remove('holding', 'touching');
+        }
+
+        // ===== STARTUP =====
+        window.addEventListener('load', () => {
+            console.log('🚀 Softwaretakt initializing...');
+            
+            // Debug: Check if all required variables are defined
+            console.log('🔍 Debug check:');
+            console.log('- sequencerPlaying:', typeof sequencerPlaying, sequencerPlaying);
+            console.log('- currentStep:', typeof currentStep, currentStep);
+            console.log('- stepData:', typeof stepData, stepData.length);
+            console.log('- tracks:', typeof tracks, tracks.length);
+            console.log('- selectedTrack:', typeof selectedTrack, selectedTrack);
+            
+            // Initialize UI components
+            initStepGrid();
+            generatePianoKeys();
+            initSamplePreviews();
+            updateWaveform();
+            updateSampleInfo();
+            updateBPMDisplay();
+            updateSignatureDisplay();
+            
+            // Initialize MIDI
+            initMIDI();
+            
+            // Test function for sequencer
+            window.testSequencer = function() {
+                console.log('🧪 Testing sequencer manually...');
+                toggleSequencer();
+            };
+            
+            // Initialize audio on first user interaction
+            document.addEventListener('click', async () => {
+                if (!audioInitialized) {
+                    console.log('👆 User clicked - initializing audio...');
+                    await initAudio();
+                }
+            }, { once: true });
+            
+            console.log('✅ Softwaretakt ready! Click anywhere to enable audio.');
+            console.log('💡 Try typing "testSequencer()" in console to test sequencer');
+        });
+
+        // ===== KEYBOARD SHORTCUTS =====
+        document.addEventListener('keydown', (e) => {
+            // Handle piano keyboard input first
+            handleKeyboardInput(e);
+            
+            switch (e.key) {
+                case ' ':
+                    e.preventDefault();
+                    toggleSequencer();
+                    break;
+                case 'c':
+                    if (!e.ctrlKey && !e.metaKey) {
+                        clearPattern();
+                    }
+                    break;
+                case 'r':
+                    e.preventDefault();
+                    toggleRecordMode();
+                    break;
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                    selectTrack(parseInt(e.key) - 1);
+                    break;
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            // Handle piano keyboard input
+            handleKeyboardInput(e);
+        });
+
+        // ===== INITIALIZATION =====
+        // Initialize visualizations when page loads
+        setTimeout(() => {
+            updateWaveform();
+            updateEnvelope();
+            
+            // Initialize all track displays
+            for (let i = 0; i < 6; i++) {
+                updateTrackDisplay(i);
+            }
+            
+            // Add click handlers for interactive waveform editing
+            const waveformCanvas = document.getElementById('waveformCanvas');
+            if (waveformCanvas) {
+                waveformCanvas.addEventListener('click', (e) => {
+                    const rect = waveformCanvas.getBoundingClientRect();
+                    const clickX = e.clientX - rect.left;
+                    const clickPercent = (clickX / waveformCanvas.width) * 100;
+                    
+                    // Set start/end point based on current values and click position
+                    const currentStart = paramValues.start;
+                    const currentEnd = paramValues.end;
+                    const midPoint = (currentStart + currentEnd) / 2;
+                    
+                    if (clickPercent < midPoint) {
+                        // Clicked closer to start - adjust start point
+                        paramValues.start = Math.max(0, Math.min(clickPercent, currentEnd - 5));
+                        document.getElementById('startValue').textContent = Math.round(paramValues.start) + '%';
+                    } else {
+                        // Clicked closer to end - adjust end point  
+                        paramValues.end = Math.max(currentStart + 5, Math.min(100, clickPercent));
+                        document.getElementById('endValue').textContent = Math.round(paramValues.end) + '%';
+                    }
+                    
+                    updateWaveform();
+                    console.log('🎯 Waveform click: Start=' + paramValues.start + '% End=' + paramValues.end + '%');
+                });
+            }
+            
+            console.log('🎨 Visualizations initialized');
+        }, 100);
+
+        
+        // ===== INITIALIZATION =====
+        
+        // Initialize UI displays
+        function initializeUI() {
+            console.log('🎛️ Initializing UI displays...');
+            
+            // Update all displays
+            updatePageDisplay();
+            updateLengthDisplay();
+            updateStepGridDisplay();
+            initStepGrid();
+            generatePianoKeyboard();
+            updateWaveform();
+            updateEnvelopeDisplay();
+            
+            console.log('✅ UI initialized successfully!');
+        }
+        
+        // Initialize when page loads
+        setTimeout(() => {
+            initializeUI();
+            // Auto-initialize audio on page load
+            initAudio().then(() => {
+                console.log('🔊 Audio auto-initialized successfully!');
+            }).catch(err => {
+                console.warn('⚠️ Audio auto-init failed, will try on first user interaction:', err);
+            });
+        }, 100);
+        
+        console.log('🎵 Softwaretakt script loaded successfully!');
+    </script>
+</body>
+</html>

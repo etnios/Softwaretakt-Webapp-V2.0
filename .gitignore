@@ -1,0 +1,44 @@
+# Xcode
+.build/
+.swiftpm/
+*.xcworkspace
+*.xcuserdata/
+*.xcscheme
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+Packages/
+Package.pins
+Package.resolved
+.swiftpm/
+
+# Backup files
+*_broken.html
+*.backup
+*.bak
+*.tmp
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# VSCode
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+.vscode/extensions.json
+
+# Node modules (if any)
+node_modules/
+
+# Logs
+*.log
+logs/
