@@ -997,7 +997,6 @@
                     <div class="keyboard-header">
                         <span style="font-size: 7px; color: rgba(255,255,255,0.7);">PIANO</span>
                         <div class="keyboard-controls">
-                            <button class="keyboard-btn" id="recordBtn" onclick="toggleRecordMode()">🔴</button>
                             <button class="keyboard-btn" onclick="transposeKeyboard(-12)">-OCT</button>
                             <button class="keyboard-btn" onclick="transposeKeyboard(12)">+OCT</button>
                             <span id="octaveDisplay" style="font-size: 7px; color: #00ffff;">C3</span>
@@ -1426,6 +1425,79 @@
             return buffer;
         }
 
+        // ===== PITCHED SAMPLE PLAYBACK =====
+        async function playSampleWithPitch(sampleName, targetFrequency) {
+            if (!audioInitialized) {
+                await initAudio();
+            }
+            
+            if (!audioContext || !sampleBuffers[sampleName] || !masterGain) {
+                console.log('⚠️ Audio not ready or sample not found:', sampleName);
+                return;
+            }
+            
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+            }
+            
+            // Calculate pitch shift based on target frequency
+            // Assuming the base sample is at C3 (130.81 Hz) for pitch reference
+            const baseFrequency = 130.81; // C3
+            const pitchRatio = targetFrequency / baseFrequency;
+            
+            const source = audioContext.createBufferSource();
+            const gainNode = audioContext.createGain();
+            const filterNode = audioContext.createBiquadFilter();
+            
+            source.buffer = sampleBuffers[sampleName];
+            
+            // Apply pitch shift
+            source.playbackRate.value = pitchRatio;
+            
+            // Apply sample start/end points
+            const bufferDuration = source.buffer.duration;
+            const startOffset = (paramValues.start / 100) * bufferDuration;
+            const endOffset = (paramValues.end / 100) * bufferDuration;
+            const sampleDuration = endOffset - startOffset;
+            
+            // Apply filter
+            filterNode.type = 'lowpass';
+            filterNode.frequency.value = 20000 * (paramValues.filter / 100);
+            
+            // Calculate envelope timing (adjusted for pitch)
+            const attackTime = paramValues.attack / 1000;
+            const decayTime = paramValues.decay / 1000;
+            const releaseTime = paramValues.release / 1000;
+            const sustainLevel = 0.7;
+            const peakVolume = paramValues.volume / 100;
+            const sustainVolume = peakVolume * sustainLevel;
+            
+            const now = audioContext.currentTime;
+            
+            // ADSR Envelope Implementation
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(peakVolume, now + attackTime);
+            gainNode.gain.linearRampToValueAtTime(sustainVolume, now + attackTime + decayTime);
+            
+            // Adjust duration for pitch ratio
+            const adjustedDuration = sampleDuration / pitchRatio;
+            const sustainTime = Math.max(0.1, adjustedDuration - attackTime - decayTime - releaseTime);
+            gainNode.gain.setValueAtTime(sustainVolume, now + attackTime + decayTime + sustainTime);
+            gainNode.gain.linearRampToValueAtTime(0, now + attackTime + decayTime + sustainTime + releaseTime);
+            
+            // Connect audio graph
+            source.connect(filterNode);
+            filterNode.connect(gainNode);
+            gainNode.connect(masterGain);
+            
+            // Start playback with offset and adjusted duration
+            source.start(now, startOffset, adjustedDuration + releaseTime);
+            
+            console.log(`🥁 Playing pitched sample: ${sampleName} at ${targetFrequency.toFixed(1)}Hz (ratio: ${pitchRatio.toFixed(2)})`);
+            
+            return source;
+        }
+
         // ===== AUDIO PLAYBACK =====
         async function playSampleBuffer(sampleName) {
             if (!audioInitialized) {
@@ -1600,19 +1672,21 @@
         }
 
         // ===== UNIFIED PLAYBACK =====
-        async function playTrackSound(trackIndex, isManualTrigger = false) {
+        async function playTrackSound(trackIndex, isManualTrigger = false, stepIndex = null, noteOverride = null, frequencyOverride = null) {
             const config = trackConfig[trackIndex];
             if (!config) return;
             
-            console.log(`🎵 playTrackSound: Track ${trackIndex + 1}, Manual: ${isManualTrigger}, Recording: ${sequencerIsRecording}`);
+            console.log(`🎵 playTrackSound: Track ${trackIndex + 1}, Manual: ${isManualTrigger}, Step: ${stepIndex}, Note: ${noteOverride || config.assignment}, Freq: ${frequencyOverride || 'default'}, Recording: ${sequencerIsRecording}`);
             
             // Only record if it's a manual trigger AND recording is enabled
             if (isManualTrigger && sequencerIsRecording) {
                 console.log(`📝 Recording manual trigger for track ${trackIndex + 1}`);
                 if (config.engine === 'synth') {
-                    recordEvent(trackIndex, 127, config.assignment); // Pass the note name
+                    // Use noteOverride if provided (from keyboard), otherwise use track assignment
+                    const noteToRecord = noteOverride || config.assignment;
+                    recordEvent(trackIndex, 127, noteToRecord, frequencyOverride); // Pass the actual note and frequency
                 } else {
-                    recordEvent(trackIndex, 127); // Sample tracks don't need note info
+                    recordEvent(trackIndex, 127, noteOverride, frequencyOverride); // Pass note and frequency for sampler tracks too
                 }
             } else if (isManualTrigger) {
                 console.log(`🎵 Manual trigger but recording disabled for track ${trackIndex + 1}`);
@@ -1631,10 +1705,48 @@
                     'crash': 'crash'
                 };
                 const sampleName = sampleMap[config.assignment];
+                
+                // For manual triggers with frequency override (keyboard input), use pitch-shifted sample
+                if (isManualTrigger && frequencyOverride && sampleName && sampleBuffers[sampleName]) {
+                    console.log(`🎵 Playing pitched sample from keyboard: ${sampleName} at ${frequencyOverride}Hz`);
+                    return await playSampleWithPitch(sampleName, frequencyOverride);
+                }
+                
+                // For sequencer playback, check if there's a per-step pitch for pitch-shifted samples
+                if (!isManualTrigger && stepIndex !== null && tracks[trackIndex].steps[stepIndex]) {
+                    const stepData = tracks[trackIndex].steps[stepIndex];
+                    if (stepData.frequency && sampleName && sampleBuffers[sampleName]) {
+                        console.log(`🎵 Playing pitched sample: ${sampleName} at ${stepData.frequency}Hz`);
+                        return await playSampleWithPitch(sampleName, stepData.frequency);
+                    }
+                }
+                
                 if (sampleName && sampleBuffers[sampleName]) {
                     return await playSampleBuffer(sampleName);
                 }
             } else if (config.engine === 'synth') {
+                // For manual triggers with frequency override (keyboard input), use that frequency directly
+                if (isManualTrigger && frequencyOverride) {
+                    console.log(`🎵 Playing synth with keyboard frequency: ${frequencyOverride}Hz`);
+                    return await playSynthNoteByFrequency(frequencyOverride, 0.8);
+                }
+                
+                // For manual triggers with noteOverride (keyboard input), use that note
+                if (isManualTrigger && noteOverride) {
+                    console.log(`🎵 Playing synth with keyboard note: ${noteOverride}`);
+                    return await playSynthNote(noteOverride, 0.8);
+                }
+                
+                // For sequencer playback, check if there's a per-step frequency
+                if (!isManualTrigger && stepIndex !== null && tracks[trackIndex].steps[stepIndex]) {
+                    const stepData = tracks[trackIndex].steps[stepIndex];
+                    if (stepData.frequency) {
+                        console.log(`🎵 Playing synth with recorded frequency: ${stepData.frequency}Hz`);
+                        return await playSynthNoteByFrequency(stepData.frequency, 0.8);
+                    }
+                }
+                
+                // Default to track assignment for manual triggers or no recorded frequency
                 return await playSynthNote(config.assignment, 0.8);
             }
         }
@@ -2013,13 +2125,13 @@
             console.log(`🎛️ Quantize ${quantizeEnabled ? 'enabled' : 'disabled'}`);
         }
 
-        function recordEvent(trackIndex, velocity = 127, note = null) {
+        function recordEvent(trackIndex, velocity = 127, note = null, frequency = null) {
             if (!sequencerIsRecording) {
                 console.log(`🚫 Recording disabled - not recording event for track ${trackIndex + 1}`);
                 return;
             }
             
-            console.log(`🎵 Recording event: Track ${trackIndex + 1}, Note: ${note || 'N/A'}, Velocity: ${velocity}`);
+            console.log(`🎵 Recording event: Track ${trackIndex + 1}, Note: ${note || 'N/A'}, Freq: ${frequency || 'N/A'}, Velocity: ${velocity}`);
             
             const currentTime = audioContext ? audioContext.currentTime : Date.now() / 1000;
             const relativeTime = currentTime - recordStartTime;
@@ -2054,20 +2166,20 @@
                 const trackData = tracks[trackIndex];
                 trackData.steps[targetStep].active = true;
                 
-                // For synth tracks, also store the note/pitch
-                if (trackData.engine === 'synth' && note) {
+                // Store note/pitch data for both synth and sampler tracks when note is provided
+                if (note && typeof note === 'string') {
                     // Convert note name to pitch number for storage
                     const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-                    let pitch = 0;
-                    if (typeof note === 'string') {
-                        const noteName = note.replace(/[0-9]/g, '');
-                        const octave = parseInt(note.replace(/[^0-9]/g, '')) || 3;
-                        const noteIndex = noteNames.indexOf(noteName);
-                        if (noteIndex >= 0) {
-                            pitch = octave * 12 + noteIndex;
-                            trackData.steps[targetStep].pitch = pitch;
-                            trackData.steps[targetStep].frequency = keyboardNotes[note];
-                        }
+                    const noteName = note.replace(/[0-9]/g, '');
+                    const octave = parseInt(note.replace(/[^0-9]/g, '')) || 3;
+                    const noteIndex = noteNames.indexOf(noteName);
+                    if (noteIndex >= 0) {
+                        const pitch = octave * 12 + noteIndex;
+                        trackData.steps[targetStep].pitch = pitch;
+                        // Use passed frequency if available, otherwise look up in keyboardNotes
+                        trackData.steps[targetStep].frequency = frequency || keyboardNotes[note];
+                        
+                        console.log(`📝 Stored pitch data: ${note} (${pitch}) at ${trackData.steps[targetStep].frequency}Hz for ${trackData.engine} track ${trackIndex + 1}`);
                     }
                 }
                 
@@ -2278,7 +2390,7 @@
                         
                         if (hasStep) {
                             activeSteps.push(track);
-                            playTrackSound(track, false); // Explicitly mark as sequencer playback, not manual trigger
+                            playTrackSound(track, false, currentStep); // Pass current step index for per-step frequency
                         }
                     }
                 }
@@ -2737,7 +2849,6 @@
 
         // ===== PIANO KEYBOARD =====
         let currentOctave = 3;  // Start at middle octave
-        let recordMode = false;
         let pressedKeys = new Set();
         
         const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -2811,8 +2922,12 @@
         }
         
         async function playPianoNote(noteIndex, noteName) {
+            console.log(`🎹 playPianoNote called: noteIndex=${noteIndex}, noteName=${noteName}, currentOctave=${currentOctave}`);
+            
             const midiNote = (currentOctave * 12) + noteIndex + 12; // +12 for C0 = MIDI 12
             const frequency = 440 * Math.pow(2, (midiNote - 69) / 12); // A4 = 440Hz = MIDI 69
+            
+            console.log(`🎹 Calculated: MIDI=${midiNote}, Frequency=${frequency.toFixed(1)}Hz`);
             
             // Visual feedback
             const key = document.querySelector(`.piano-key[data-note="${noteIndex}"]`);
@@ -2823,8 +2938,10 @@
             
             // Audio playback - auto-initialize if needed
             if (!audioInitialized) {
+                console.log(`🎹 Audio not initialized, trying to initialize...`);
                 try {
                     await initAudio();
+                    console.log(`✅ Audio initialized successfully`);
                 } catch (err) {
                     console.warn('⚠️ Could not initialize audio:', err);
                     return;
@@ -2832,24 +2949,28 @@
             }
             
             if (audioInitialized) {
-                if (sequencerState.isPlaying && recordMode) {
-                    // Real-time recording mode
-                    recordNoteToStep(midiNote, frequency);
-                } else if (selectedStepForPitch >= 0) {
+                console.log(`🎹 Audio is initialized, proceeding with playback`);
+                if (selectedStepForPitch >= 0) {
                     // Step pitch entry mode
+                    console.log(`🎯 Step pitch entry mode for step ${selectedStepForPitch}`);
                     assignPitchToStep(selectedStepForPitch, midiNote, frequency);
                     selectedStepForPitch = -1;
                     updateStepGridDisplay();
                 } else {
-                    // Free play mode - use current track's engine
+                    // Free play mode - use current track's engine and unified recording system
+                    console.log(`🎹 Free play mode - calling playTrackNoteFromKeyboard`);
                     playTrackNoteFromKeyboard(frequency, midiNote, noteName);
                 }
+            } else {
+                console.log(`❌ Audio still not initialized after init attempt`);
             }
             
             console.log(`🎹 Playing: ${noteName}${currentOctave} (MIDI: ${midiNote}, Freq: ${frequency.toFixed(1)}Hz) on Track ${selectedTrack + 1}`);
         }
         
         async function playTrackNoteFromKeyboard(frequency, midiNote, noteName) {
+            console.log(`🎛️ playTrackNoteFromKeyboard called: freq=${frequency.toFixed(1)}Hz, midi=${midiNote}, note=${noteName}, selectedTrack=${selectedTrack}`);
+            
             const config = trackConfig[selectedTrack];
             if (!config) {
                 console.log(`❌ No config found for track ${selectedTrack}`);
@@ -2859,15 +2980,20 @@
             console.log(`🎛️ Track ${selectedTrack + 1} config:`, config);
             
             if (config.engine === 'sampler') {
-                // For sampler tracks, just play the assigned sample
-                // (samples don't change pitch from keyboard input)
-                await playTrackSound(selectedTrack, true); // Manual trigger from keyboard
-                console.log(`🥁 Sampler track ${selectedTrack + 1}: Playing ${config.assignment} sample`);
+                // For sampler tracks, play the assigned sample 
+                // Pass frequency for potential pitch-shifting when recording
+                const fullNoteName = `${noteName}${currentOctave}`;
+                console.log(`🥁 Calling playTrackSound for sampler: ${config.assignment}`);
+                await playTrackSound(selectedTrack, true, null, fullNoteName, frequency); // Pass note and frequency for recording
+                console.log(`🥁 Sampler track ${selectedTrack + 1}: Playing ${config.assignment} sample (with pitch data for recording)`);
             } else if (config.engine === 'synth') {
-                // For synth tracks, play the calculated frequency using a simpler approach
-                console.log(`🎵 Attempting to play synth note: ${noteName} at ${frequency.toFixed(1)}Hz on track ${selectedTrack + 1}`);
-                await playSimpleSynthNote(frequency);
-                console.log(`🎵 Synth track ${selectedTrack + 1}: Playing ${noteName} at ${frequency.toFixed(1)}Hz`);
+                // For synth tracks, pass both the full note name for recording and frequency for playback
+                const fullNoteName = `${noteName}${currentOctave}`;
+                
+                console.log(`🎵 Calling playTrackSound for synth: ${fullNoteName} at ${frequency.toFixed(1)}Hz`);
+                await playTrackSound(selectedTrack, true, null, fullNoteName, frequency); // Pass both note and frequency
+                
+                console.log(`🎵 Synth track ${selectedTrack + 1}: Playing ${fullNoteName} at ${frequency.toFixed(1)}Hz`);
             } else {
                 console.log(`⚠️ Unknown engine type: ${config.engine} for track ${selectedTrack + 1}`);
             }
@@ -3012,24 +3138,6 @@
             oscillator.stop(audioContext.currentTime + 0.5);
         }
         
-        function recordNoteToStep(midiNote, frequency) {
-            if (!sequencerState.isPlaying) return;
-            
-            const currentStep = Math.floor((audioContext.currentTime - sequencerState.startTime) / sequencerState.stepDuration) % patternLength;
-            
-            // Record to currently selected track
-            if (tracks[selectedTrack].engine === 'synth') {
-                tracks[selectedTrack].steps[currentStep] = {
-                    active: true,
-                    pitch: midiNote,
-                    frequency: frequency
-                };
-                
-                updateStepGridDisplay();
-                console.log(`🔴 Recorded note ${midiNote} to step ${currentStep} on track ${selectedTrack}`);
-            }
-        }
-        
         function assignPitchToStep(stepIndex, midiNote, frequency) {
             if (tracks[selectedTrack].engine === 'synth') {
                 if (!tracks[selectedTrack].steps[stepIndex]) {
@@ -3056,16 +3164,6 @@
             if (display) {
                 display.textContent = `C${currentOctave}`;
             }
-        }
-        
-        function toggleRecordMode() {
-            recordMode = !recordMode;
-            const btn = document.querySelector('[onclick*="toggleRecordMode"]');
-            if (btn) {
-                btn.style.background = recordMode ? 'rgba(255,0,0,0.3)' : '';
-                btn.style.color = recordMode ? '#ff6666' : '';
-            }
-            console.log(`🔴 Record mode: ${recordMode ? 'ON' : 'OFF'}`);
         }
         
         function selectStepForEdit(stepIndex) {
@@ -3532,7 +3630,7 @@
                     break;
                 case 'r':
                     e.preventDefault();
-                    toggleRecordMode();
+                    toggleRecord();
                     break;
                 case '1':
                 case '2':
