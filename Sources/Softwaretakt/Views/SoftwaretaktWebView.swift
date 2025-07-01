@@ -1,13 +1,22 @@
 import SwiftUI
 import WebKit
+#if os(iOS)
+import UIKit
+#endif
 
 struct SoftwaretaktWebView: UIViewRepresentable {
+    typealias UIViewType = WKWebView
+    
     func makeUIView(context: Context) -> WKWebView {
         let webView = WKWebView()
+        #if os(iOS)
         webView.backgroundColor = UIColor.black
+        #endif
         
         // Configure to allow media playback
+        #if os(iOS)
         webView.configuration.allowsInlineMediaPlayback = true
+        #endif
         webView.configuration.mediaTypesRequiringUserActionForPlayback = []
         
         // Load the HTML file from the bundle

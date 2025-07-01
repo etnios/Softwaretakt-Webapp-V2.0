@@ -1034,13 +1034,10 @@ class AudioEngine: ObservableObject {
         guard track < 16 else { return }
         
         // Convert SimpleSample back to Sample and load it
-        let sample = Sample(
-            url: simpleSample.url,
-            name: simpleSample.name,
-            category: .user
-        )
+        let sample = Sample(url: simpleSample.url)
+        sample.name = simpleSample.name
         
         trackConfigs[track].sample = sample
-        loadSample(sample, track: track)
+        loadSample(sample, toTrack: track)
     }
 }

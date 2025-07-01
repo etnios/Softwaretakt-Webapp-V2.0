@@ -1,5 +1,9 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
+@available(macOS 13.3, iOS 15.0, *)
 struct ContentView: View {
     @EnvironmentObject var audioEngine: AudioEngine
     @EnvironmentObject var midiManager: MIDIManager
@@ -351,8 +355,8 @@ struct ContentView: View {
                         )
                         .frame(width: CGFloat.random(in: 10...30))
                         .position(
-                            x: CGFloat.random(in: 0...UIScreen.main.bounds.width),
-                            y: CGFloat.random(in: 0...UIScreen.main.bounds.height) + particleOffset
+                            x: CGFloat.random(in: 0...screenWidth()),
+                            y: CGFloat.random(in: 0...screenHeight()) + particleOffset
                         )
                         .animation(
                             .linear(duration: Double.random(in: 8...15))
@@ -364,7 +368,7 @@ struct ContentView: View {
             }
             .onAppear {
                 gradientRotation = 360
-                particleOffset = -UIScreen.main.bounds.height
+                particleOffset = -screenHeight()
             }
         }
     }
