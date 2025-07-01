@@ -103,9 +103,9 @@
             flex: 1;
             display: grid;
             grid-template-areas: 
-                "tracks sequencer"
-                "samples controls";
-            grid-template-columns: 180px 1fr;
+                "tracks sequencer fx"
+                "samples controls fx";
+            grid-template-columns: 180px 1fr 200px;
             grid-template-rows: minmax(200px, 45vh) minmax(250px, 55vh);
             gap: 8px;
             padding: 8px;
@@ -626,232 +626,7 @@
             font-size: 11px;
         }
 
-        /* Vertical Mixer Panel */
-        .vertical-mixer-panel {
-            grid-area: samples;
-            overflow-y: auto;
-            overflow-x: auto;
-        }
-
-        .mixer-board {
-            display: flex;
-            gap: 4px;
-            padding: 8px 4px;
-            min-width: fit-content;
-        }
-
-        .channel-strip {
-            width: 60px;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 8px;
-            padding: 6px 4px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s ease;
-            min-height: 280px;
-        }
-
-        .channel-strip:hover {
-            background: rgba(255,255,255,0.06);
-            border-color: rgba(0,255,255,0.3);
-        }
-
-        .channel-strip.active {
-            background: rgba(0,255,255,0.1);
-            border-color: #00ffff;
-            box-shadow: 0 0 12px rgba(0,255,255,0.3);
-        }
-
-        .channel-strip.master {
-            background: rgba(255,102,0,0.1);
-            border-color: rgba(255,102,0,0.3);
-            width: 70px;
-        }
-
-        .channel-strip.master:hover {
-            background: rgba(255,102,0,0.15);
-            border-color: rgba(255,102,0,0.5);
-        }
-
-        .channel-label {
-            font-size: 8px;
-            font-weight: bold;
-            color: #00ffff;
-            text-align: center;
-            margin-bottom: 4px;
-            min-height: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .channel-label.master {
-            color: #ff6600;
-        }
-
-        .channel-number {
-            font-size: 6px;
-            color: rgba(255,255,255,0.5);
-            background: rgba(255,255,255,0.1);
-            padding: 1px 3px;
-            border-radius: 2px;
-            margin-top: 2px;
-        }
-
-        /* Vertical Fader */
-        .vertical-fader {
-            width: 20px;
-            height: 120px;
-            background: rgba(0,0,0,0.6);
-            border-radius: 10px;
-            position: relative;
-            cursor: pointer;
-            border: 1px solid rgba(255,255,255,0.2);
-            margin: 8px 0;
-        }
-
-        .vertical-fader:hover {
-            border-color: rgba(0,255,255,0.5);
-        }
-
-        .fader-track {
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            right: 2px;
-            bottom: 2px;
-            background: linear-gradient(to top, #00ffff, #0080ff, #004080);
-            border-radius: 8px;
-            transition: clip-path 0.1s ease;
-        }
-
-        .fader-handle {
-            position: absolute;
-            width: 24px;
-            height: 8px;
-            background: linear-gradient(45deg, #ffffff, #cccccc);
-            border: 1px solid #666;
-            border-radius: 2px;
-            left: -2px;
-            cursor: grab;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .fader-handle:active {
-            cursor: grabbing;
-            background: linear-gradient(45deg, #00ffff, #ffffff);
-        }
-
-        .fader-value {
-            font-size: 7px;
-            color: #00ffff;
-            text-align: center;
-            font-weight: bold;
-            margin-top: 4px;
-        }
-
-        /* Rotary Knobs */
-        .rotary-knobs {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .rotary-knob {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: radial-gradient(circle, #333, #111);
-            border: 2px solid rgba(255,255,255,0.3);
-            position: relative;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .rotary-knob:hover {
-            border-color: rgba(0,255,255,0.6);
-            box-shadow: 0 0 8px rgba(0,255,255,0.3);
-        }
-
-        .knob-indicator {
-            position: absolute;
-            top: 2px;
-            left: 50%;
-            width: 2px;
-            height: 8px;
-            background: #00ffff;
-            transform-origin: bottom center;
-            transform: translateX(-50%) rotate(0deg);
-            border-radius: 1px;
-            transition: transform 0.1s ease;
-        }
-
-        .knob-label {
-            font-size: 6px;
-            color: rgba(255,255,255,0.7);
-            text-align: center;
-            margin-top: 2px;
-            font-weight: bold;
-        }
-
-        .knob-value {
-            font-size: 6px;
-            color: #00ffff;
-            text-align: center;
-            font-weight: bold;
-            margin-top: 1px;
-        }
-
-        /* Mute/Solo buttons */
-        .channel-buttons {
-            display: flex;
-            gap: 4px;
-            margin-top: 8px;
-        }
-
-        .channel-btn {
-            width: 18px;
-            height: 18px;
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 3px;
-            background: rgba(255,255,255,0.1);
-            color: rgba(255,255,255,0.7);
-            cursor: pointer;
-            font-size: 8px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-        }
-
-        .channel-btn.mute:hover {
-            background: rgba(255,100,100,0.3);
-            border-color: #ff6666;
-            color: #ff6666;
-        }
-
-        .channel-btn.mute.active {
-            background: #ff4444;
-            border-color: #ff6666;
-            color: white;
-        }
-
-        .channel-btn.solo:hover {
-            background: rgba(255,255,100,0.3);
-            border-color: #ffff66;
-            color: #ffff66;
-        }
-
-        .channel-btn.solo.active {
-            background: #ffdd44;
-            border-color: #ffff66;
-            color: black;
-        }
+        /* Sample Browser */
         .sample-panel {
             grid-area: samples;
             overflow-y: auto;
@@ -1017,201 +792,6 @@
             flex: 1;
         }
 
-        /* Mixer Panel */
-        .mixer-panel {
-            grid-area: mixer;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .mixer-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .mixer-channels {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            overflow-y: auto;
-            max-height: calc(100vh - 200px);
-        }
-
-        .mixer-channel {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 6px;
-            padding: 8px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            transition: all 0.2s ease;
-        }
-
-        .mixer-channel:hover {
-            background: rgba(255,255,255,0.06);
-            border-color: rgba(0,255,255,0.3);
-        }
-
-        .mixer-channel.active {
-            background: rgba(0,255,255,0.1);
-            border-color: #00ffff;
-        }
-
-        .channel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 4px;
-        }
-
-        .channel-name {
-            font-size: 9px;
-            font-weight: bold;
-            color: #00ffff;
-        }
-
-        .channel-number {
-            font-size: 7px;
-            color: rgba(255,255,255,0.5);
-            background: rgba(255,255,255,0.1);
-            padding: 1px 4px;
-            border-radius: 2px;
-        }
-
-        .mixer-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .mixer-control-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .mixer-control-label {
-            font-size: 7px;
-            color: rgba(255,255,255,0.7);
-            text-transform: uppercase;
-            min-width: 20px;
-        }
-
-        .mixer-slider {
-            flex: 1;
-            height: 20px;
-            background: rgba(0,0,0,0.4);
-            border-radius: 10px;
-            position: relative;
-            cursor: pointer;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .mixer-slider:hover {
-            border-color: rgba(0,255,255,0.5);
-        }
-
-        .mixer-slider-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #00ffff, #0080ff);
-            border-radius: 10px;
-            transition: width 0.1s ease;
-            min-width: 2px;
-        }
-
-        .mixer-value {
-            font-size: 7px;
-            color: #00ffff;
-            min-width: 25px;
-            text-align: center;
-            font-weight: bold;
-        }
-
-        .channel-mute, .channel-solo {
-            width: 16px;
-            height: 16px;
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 3px;
-            background: rgba(255,255,255,0.1);
-            color: rgba(255,255,255,0.7);
-            cursor: pointer;
-            font-size: 7px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-        }
-
-        .channel-mute:hover {
-            background: rgba(255,100,100,0.3);
-            border-color: #ff6666;
-            color: #ff6666;
-        }
-
-        .channel-mute.active {
-            background: #ff4444;
-            border-color: #ff6666;
-            color: white;
-        }
-
-        .channel-solo:hover {
-            background: rgba(255,255,100,0.3);
-            border-color: #ffff66;
-            color: #ffff66;
-        }
-
-        .channel-solo.active {
-            background: #ffdd44;
-            border-color: #ffff66;
-            color: black;
-        }
-
-        .master-section {
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .master-volume {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .master-label {
-            font-size: 9px;
-            color: #00ffff;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .master-slider {
-            height: 30px;
-            background: rgba(0,0,0,0.4);
-            border-radius: 15px;
-            position: relative;
-            cursor: pointer;
-            border: 2px solid rgba(0,255,255,0.3);
-        }
-
-        .master-slider:hover {
-            border-color: rgba(0,255,255,0.6);
-        }
-
-        .master-slider-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #00ffff, #00ff00, #ffff00, #ff8800, #ff4400);
-            border-radius: 13px;
-            transition: width 0.1s ease;
-            min-width: 2px;
-        }
-
         /* Responsive */
         @media (max-width: 1024px) {
             .main-content {
@@ -1231,10 +811,9 @@
                 grid-template-areas: 
                     "sequencer"
                     "tracks"
-                    "mixer"
                     "samples"
                     "controls";
-                grid-template-rows: auto auto auto auto 1fr;
+                grid-template-rows: auto auto auto 1fr;
                 gap: 4px;
                 padding: 4px;
             }
@@ -1258,6 +837,410 @@
                 width: 100% !important;
                 height: 30px !important;
             }
+        }
+
+        /* Vertical Mixer Panel */
+        /* Vertical Mixer Panel */
+        /* Vertical Mixer Panel */
+        .vertical-mixer-panel {
+            grid-area: samples;
+            overflow-y: auto;
+            overflow-x: auto;
+            min-height: 200px;
+            background: rgba(255,255,255,0.05) !important;
+            border: 1px solid rgba(0,255,255,0.3) !important;
+        }
+
+        .mixer-board {
+            display: flex;
+            gap: 2px;
+            padding: 4px;
+            min-width: fit-content;
+            background: rgba(0,0,0,0.2);
+            border-radius: 4px;
+        }
+
+        .channel-strip {
+            width: 45px;
+            background: linear-gradient(180deg, rgba(20,20,40,0.9), rgba(10,10,20,0.9));
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 6px;
+            padding: 3px 2px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            transition: all 0.2s ease;
+            min-height: 240px;
+            position: relative;
+        }
+
+        .channel-strip:hover {
+            background: linear-gradient(180deg, rgba(30,30,50,0.9), rgba(15,15,25,0.9));
+            border-color: rgba(0,255,255,0.5);
+            transform: translateY(-1px);
+        }
+
+        .channel-strip.active {
+            background: linear-gradient(180deg, rgba(0,100,150,0.3), rgba(0,50,100,0.3));
+            border: 2px solid #00ffff;
+            box-shadow: 0 0 15px rgba(0,255,255,0.4);
+        }
+
+        .channel-strip.master {
+            background: linear-gradient(180deg, rgba(100,50,0,0.3), rgba(80,40,0,0.3));
+            border-color: rgba(255,102,0,0.4);
+            width: 50px;
+        }
+
+        .channel-strip.master:hover {
+            background: linear-gradient(180deg, rgba(120,60,0,0.4), rgba(100,50,0,0.4));
+            border-color: rgba(255,102,0,0.6);
+        }
+
+        .channel-label {
+            font-size: 7px;
+            font-weight: bold;
+            color: #00ffff;
+            text-align: center;
+            padding: 1px 2px;
+            background: rgba(0,0,0,0.6);
+            border-radius: 2px;
+            min-height: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(0,255,255,0.3);
+        }
+
+        .channel-label.master {
+            color: #ff6600;
+            border-color: rgba(255,102,0,0.4);
+        }
+
+        /* Signal Meter */
+        .signal-meter {
+            width: 8px;
+            height: 60px;
+            background: rgba(0,0,0,0.8);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .meter-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, 
+                #00ff00 0%, 
+                #ffff00 70%, 
+                #ff0000 90%);
+            transition: height 0.1s ease-out;
+            height: 0%;
+            border-radius: 2px;
+        }
+
+        .meter-clip {
+            position: absolute;
+            top: 1px;
+            left: 1px;
+            right: 1px;
+            height: 3px;
+            background: #ff0000;
+            border-radius: 1px;
+            opacity: 0;
+            transition: opacity 0.1s ease;
+        }
+
+        .meter-clip.clipping {
+            opacity: 1;
+            animation: clip-blink 0.2s ease-in-out;
+        }
+
+        @keyframes clip-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Send Knobs */
+        .send-knobs {
+            display: flex;
+            gap: 2px;
+            margin: 2px 0;
+        }
+
+        .send-knob {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 1px solid rgba(0,255,255,0.4);
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .send-knob:hover {
+            border-color: #00ffff;
+            box-shadow: 0 0 6px rgba(0,255,255,0.4);
+        }
+
+        .send-knob::after {
+            content: '';
+            position: absolute;
+            top: 1px;
+            left: 50%;
+            width: 1px;
+            height: 6px;
+            background: #00ffff;
+            transform: translateX(-50%) rotate(var(--rotation, 0deg));
+            transform-origin: bottom;
+            border-radius: 1px;
+        }
+
+        .send-knob.delay::after {
+            background: #ffaa00;
+        }
+
+        .send-knob.reverb::after {
+            background: #00aaff;
+        }
+
+        /* Volume Fader */
+        .volume-fader {
+            width: 12px;
+            height: 80px;
+            background: rgba(0,0,0,0.7);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 6px;
+            position: relative;
+            cursor: pointer;
+            margin: 4px 0;
+        }
+
+        .fader-track {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            right: 2px;
+            bottom: 2px;
+            background: linear-gradient(to top, #003300, #00ff00);
+            border-radius: 4px;
+            clip-path: inset(var(--fader-top, 80%) 0 0 0);
+            transition: clip-path 0.1s ease;
+        }
+
+        .fader-handle {
+            position: absolute;
+            left: -1px;
+            right: -1px;
+            height: 8px;
+            background: linear-gradient(180deg, #ffffff, #cccccc);
+            border: 1px solid #999999;
+            border-radius: 2px;
+            cursor: grab;
+            transition: top 0.1s ease;
+            top: var(--handle-pos, 60px);
+        }
+
+        .fader-handle:active {
+            cursor: grabbing;
+            background: linear-gradient(180deg, #00ffff, #0099cc);
+        }
+
+        .fader-value {
+            font-size: 6px;
+            color: #00ffff;
+            text-align: center;
+            margin-top: 2px;
+            background: rgba(0,0,0,0.6);
+            border-radius: 2px;
+            padding: 1px;
+        }
+
+        .send-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 5px;
+            color: rgba(255,255,255,0.6);
+            margin-top: 1px;
+        }
+
+        .channel-strip {
+            width: 60px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 6px 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            min-height: 280px;
+        }
+
+        .channel-strip:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(0,255,255,0.3);
+        }
+
+        .channel-strip.active {
+            background: rgba(0,255,255,0.15);
+            border: 2px solid #00ffff;
+            box-shadow: 0 0 20px rgba(0,255,255,0.4), inset 0 0 10px rgba(0,255,255,0.2);
+            transform: scale(1.02);
+            z-index: 10;
+        }
+
+        .channel-strip.master {
+            background: rgba(255,102,0,0.1);
+            border-color: rgba(255,102,0,0.3);
+            width: 70px;
+        }
+
+        .channel-strip.master:hover {
+            background: rgba(255,102,0,0.15);
+            border-color: rgba(255,102,0,0.5);
+        }
+
+        .channel-label {
+            font-size: 8px;
+            font-weight: bold;
+            color: #00ffff;
+            text-align: center;
+            margin-bottom: 4px;
+            min-height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: all 0.2s ease;
+        }
+
+        .channel-strip.active .channel-label {
+            background: rgba(0,255,255,0.2);
+            color: #ffffff;
+            font-weight: 900;
+            text-shadow: 0 0 8px #00ffff;
+            border: 1px solid rgba(0,255,255,0.5);
+        }
+
+        .channel-label.master {
+            color: #ff6600;
+        }
+
+        .channel-number {
+            font-size: 6px;
+            color: rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.1);
+            padding: 1px 3px;
+            border-radius: 2px;
+            margin-top: 2px;
+        }
+
+        /* FX Parameters Panel */
+        .fx-panel {
+            grid-area: fx;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            overflow-y: auto;
+            max-height: 100%;
+        }
+
+        .fx-section {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+
+        .fx-section h3 {
+            font-size: 11px;
+            font-weight: bold;
+            color: #00ffff;
+            margin: 0 0 8px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .fx-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .fx-control {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .fx-label {
+            font-size: 9px;
+            color: rgba(255,255,255,0.8);
+            min-width: 50px;
+            text-transform: uppercase;
+        }
+
+        .fx-knob {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 2px solid rgba(0,255,255,0.3);
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .fx-knob:hover {
+            border-color: #00ffff;
+            box-shadow: 0 0 8px rgba(0,255,255,0.3);
+        }
+
+        .fx-knob.active {
+            border-color: #ff6b00;
+            box-shadow: 0 0 12px rgba(255,107,0,0.5);
+        }
+
+        .fx-knob.active .fx-knob-indicator {
+            background: #ff6b00;
+        }
+
+        .fx-knob-indicator {
+            position: absolute;
+            width: 2px;
+            height: 14px;
+            background: #00ffff;
+            top: 3px;
+            left: 50%;
+            transform-origin: bottom center;
+            border-radius: 1px;
+        }
+
+        .fx-value {
+            font-size: 8px;
+            color: #00ffff;
+            font-weight: bold;
+            min-width: 30px;
+            text-align: center;
+            transition: color 0.2s ease;
+        }
+
+        .fx-value.updating {
+            color: #ff6b00;
         }
     </style>
 </head>
@@ -1492,18 +1475,6 @@
                             <span class="track-assignment" id="assignment-15">Tom</span>
                         </div>
                     </div>
-                    
-                    <div class="track-item" data-track="16" onclick="selectTrack(16)">
-                        <div class="track-header">
-                            <span class="track-icon">🎛️</span>
-                            <span class="track-name">Master</span>
-                            <span class="track-engine" id="engine-16">MASTER</span>
-                        </div>
-                        <div class="track-controls">
-                            <button class="engine-btn active" style="background: linear-gradient(45deg, #ff6600, #ff4400); border-color: #ff6600;" onclick="return false;">M</button>
-                            <span class="track-assignment" id="assignment-16">Output</span>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -1606,10 +1577,11 @@
             </div>
 
             <!-- Vertical Mixer -->
-            <div class="vertical-mixer-panel panel">
-                <h3 style="font-size: 11px; margin-bottom: 8px;">17-Track Mixer</h3>
-                <div class="mixer-board" id="mixerBoard">
+            <div class="vertical-mixer-panel panel" style="background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(0,255,255,0.3) !important; min-height: 300px !important;">
+                <h3 style="font-size: 11px; margin-bottom: 8px; color: #00ffff !important; font-weight: bold;">🎛️ 17-TRACK MIXER</h3>
+                <div class="mixer-board" id="mixerBoard" style="background: rgba(0,0,0,0.2) !important; min-height: 250px !important; border: 1px solid rgba(0,255,255,0.2) !important;">
                     <!-- Mixer channels will be generated dynamically -->
+                    <div style="color: #fff; font-size: 14px; padding: 20px;">MIXER LOADING...</div>
                 </div>
             </div>
 
@@ -1720,23 +1692,70 @@
                 </div>
             </div>
 
-            <!-- Mixer Panel -->
-            <div class="mixer-panel panel">
-                <div class="mixer-header">
-                    <h3 style="font-size: 12px; margin: 0;">Mixer</h3>
-                    <button class="control-btn" style="font-size: 8px; padding: 2px 6px;" onclick="resetMixer()">Reset</button>
-                </div>
+            <!-- FX Panel -->
+            <div class="fx-panel panel">
+                <h3 style="font-size: 11px; margin-bottom: 8px; color: #00ffff;">FX PARAMETERS</h3>
                 
-                <div class="mixer-channels" id="mixerChannels">
-                    <!-- Mixer channels will be generated dynamically -->
-                </div>
-                
-                <div class="master-section">
-                    <div class="master-label">Master Volume</div>
-                    <div class="master-slider" onclick="setMasterVolume(event)">
-                        <div class="master-slider-fill" id="masterSliderFill" style="width: 75%;"></div>
+                <!-- Delay Section -->
+                <div class="fx-section">
+                    <h3>🔄 DELAY</h3>
+                    <div class="fx-controls">
+                        <div class="fx-control">
+                            <span class="fx-label">Time</span>
+                            <div class="fx-knob" id="delayTimeKnob" data-param="delayTime" data-value="0.25">
+                                <div class="knob-indicator"></div>
+                            </div>
+                        </div>
+                        <div class="fx-control">
+                            <span class="fx-label">Feedback</span>
+                            <div class="fx-knob" id="delayFeedbackKnob" data-param="delayFeedback" data-value="0.4">
+                                <div class="knob-indicator"></div>
+                            </div>
+                        </div>
+                        <div class="fx-control">
+                            <span class="fx-label">HPF</span>
+                            <div class="fx-knob" id="delayHPFKnob" data-param="delayHPF" data-value="300">
+                                <div class="knob-indicator"></div>
+                            </div>
+                        </div>
+                        <div class="fx-control">
+                            <span class="fx-label">LPF</span>
+                            <div class="fx-knob" id="delayLPFKnob" data-param="delayLPF" data-value="8000">
+                                <div class="knob-indicator"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mixer-value" id="masterVolumeValue">75%</div>
+                </div>
+
+                <!-- Reverb Section -->
+                <div class="fx-section">
+                    <h3>🌊 REVERB</h3>
+                    <div class="fx-controls">
+                        <div class="fx-control">
+                            <span class="fx-label">Size</span>
+                            <div class="fx-knob" id="reverbSizeKnob" data-param="reverbSize" data-value="0.6">
+                                <div class="knob-indicator"></div>
+                            </div>
+                        </div>
+                        <div class="fx-control">
+                            <span class="fx-label">Decay</span>
+                            <div class="fx-knob" id="reverbDecayKnob" data-param="reverbDecay" data-value="1.5">
+                                <div class="knob-indicator"></div>
+                            </div>
+                        </div>
+                        <div class="fx-control">
+                            <span class="fx-label">Damping</span>
+                            <div class="fx-knob" id="reverbDampingKnob" data-param="reverbDamping" data-value="0.7">
+                                <div class="knob-indicator"></div>
+                            </div>
+                        </div>
+                        <div class="fx-control">
+                            <span class="fx-label">Pre-delay</span>
+                            <div class="fx-knob" id="reverbPredelayKnob" data-param="reverbPredelay" data-value="0.03">
+                                <div class="knob-indicator"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1747,29 +1766,20 @@
         
         console.log('🎵 Softwaretakt Loading...');
         
+        // FORCE MIXER INITIALIZATION AS SOON AS POSSIBLE
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 DOM LOADED - IMMEDIATE MIXER INIT!');
+            setTimeout(() => {
+                initMixer();
+            }, 10);
+        });
+        
         // Global Audio State
         let audioContext = null;
         let masterGain = null;
         let currentSample = 'kick';
         let sampleBuffers = {};
         let selectedTrack = 0;
-        
-        // Global Effects
-        let delayNode = null;
-        let delayGain = null;
-        let delayFeedback = null;
-        let reverbNode = null;
-        let reverbGain = null;
-        let trackGains = []; // Individual track gain nodes
-        let trackDelaySends = []; // Delay send gains for each track
-        let trackReverbSends = []; // Reverb send gains for each track
-        
-        // Track names for mixer display
-        let trackNames = [
-            'Kick', 'Snare', 'HiHat', 'Perc', 'Bass', 'Lead',
-            'Pad', 'Arp', 'FX1', 'FX2', 'Vox', 'String',
-            'Tom', 'Crash', 'Bell', 'Track 16', 'Master'
-        ];
         
         // ===== SEQUENCER STATE =====
         let sequencerPlaying = false;
@@ -1921,81 +1931,6 @@
             {note: 'F', type: 'white'}, {note: 'F#', type: 'black'}, {note: 'G', type: 'white'}, {note: 'G#', type: 'black'}, {note: 'A', type: 'white'}, {note: 'A#', type: 'black'}, {note: 'B', type: 'white'}
         ];
 
-        // ===== GLOBAL EFFECTS SETUP =====
-        async function initGlobalEffects() {
-            if (!audioContext) return;
-            
-            console.log('🎛️ Initializing global effects...');
-            
-            // Create delay effect
-            delayNode = audioContext.createDelay(2.0); // Max 2 seconds delay
-            delayNode.delayTime.value = 0.3; // 300ms delay
-            
-            delayGain = audioContext.createGain();
-            delayGain.gain.value = 0.0; // Start with no delay
-            
-            delayFeedback = audioContext.createGain();
-            delayFeedback.gain.value = 0.4; // 40% feedback
-            
-            // Connect delay chain: input -> delay -> feedback -> output
-            delayNode.connect(delayGain);
-            delayGain.connect(masterGain);
-            delayNode.connect(delayFeedback);
-            delayFeedback.connect(delayNode);
-            
-            // Create reverb effect using convolution
-            reverbNode = audioContext.createConvolver();
-            reverbGain = audioContext.createGain();
-            reverbGain.gain.value = 0.0; // Start with no reverb
-            
-            // Generate impulse response for reverb
-            const impulseLength = audioContext.sampleRate * 2; // 2 second reverb
-            const impulse = audioContext.createBuffer(2, impulseLength, audioContext.sampleRate);
-            
-            for (let channel = 0; channel < 2; channel++) {
-                const channelData = impulse.getChannelData(channel);
-                for (let i = 0; i < impulseLength; i++) {
-                    const decay = Math.pow(1 - i / impulseLength, 2);
-                    channelData[i] = (Math.random() * 2 - 1) * decay;
-                }
-            }
-            
-            reverbNode.buffer = impulse;
-            reverbNode.connect(reverbGain);
-            reverbGain.connect(masterGain);
-            
-            // Initialize track gains and sends for 17 channels (16 tracks + master)
-            trackGains = [];
-            trackDelaySends = [];
-            trackReverbSends = [];
-            
-            for (let i = 0; i < 17; i++) {
-                // Track gain node
-                const trackGain = audioContext.createGain();
-                trackGain.gain.value = 0.75;
-                trackGain.connect(masterGain);
-                trackGains.push(trackGain);
-                
-                // Delay send
-                const delaySend = audioContext.createGain();
-                delaySend.gain.value = 0.0;
-                delaySend.connect(delayNode);
-                trackDelaySends.push(delaySend);
-                
-                // Reverb send
-                const reverbSend = audioContext.createGain();
-                reverbSend.gain.value = 0.0;
-                reverbSend.connect(reverbNode);
-                trackReverbSends.push(reverbSend);
-                
-                // Connect track to sends
-                trackGain.connect(delaySend);
-                trackGain.connect(reverbSend);
-            }
-            
-            console.log('✅ Global effects initialized');
-        }
-
         // ===== AUDIO INITIALIZATION =====
         async function initAudio() {
             if (audioInitialized) return true;
@@ -2008,9 +1943,6 @@
                 masterGain.connect(audioContext.destination);
                 masterGain.gain.value = 0.7;
 
-                // Initialize global effects
-                await initGlobalEffects();
-
                 // Resume context if suspended
                 if (audioContext.state === 'suspended') {
                     await audioContext.resume();
@@ -2018,6 +1950,9 @@
 
                 // Generate all samples
                 await generateAllSamples();
+                
+                // Initialize mixer audio
+                initMixerAudio();
                 
                 // Update UI
                 const statusEl = document.getElementById('audioStatus');
@@ -2502,9 +2437,6 @@
             // Update step grid
             updateStepGrid();
             updateStepGridDisplay();
-            
-            // Update mixer to highlight selected track
-            updateMixerUI();
             
             console.log('🎛️ Selected track:', index + 1, 'Engine:', config?.engine, 'Assignment:', config?.assignment);
         }
@@ -3236,49 +3168,49 @@
             ctx.clearRect(0, 0, width, height);
             
             // Generate waveform data
-            const waveformData = generateWaveformData(currentSample);
-            
-            // Draw waveform background area (inactive regions)
-            const startPos = (paramValues.start / 100) * width;
-            const endPos = (paramValues.end / 100) * width;
-            
-            ctx.fillStyle = 'rgba(255,255,255,0.1)';
-            ctx.fillRect(0, 0, startPos, height); // Before start
-            ctx.fillRect(endPos, 0, width - endPos, height); // After end
-            
-            // Draw active region background
-            ctx.fillStyle = 'rgba(0,255,255,0.1)';
-            ctx.fillRect(startPos, 0, endPos - startPos, height);
-            
-            // Draw waveform
-            ctx.strokeStyle = '#00ffff';
-            ctx.lineWidth = 2;
-            ctx.globalAlpha = 0.8;
-            ctx.beginPath();
-            
-            for (let i = 0; i < waveformData.length; i++) {
-                const x = (i / waveformData.length) * width;
-                const y = height / 2 + (waveformData[i] * height / 2);
+                    eWaveformData(currentSample);
+                    // Regenerate the step grid with new step count
+                    initStepGrid();waveform background area (inactive regions)
+                    updateStepGridDisplay();
+                }lues.end / 100) * width;
                 
-                // Dim the waveform outside start/end points
-                if (x < startPos || x > endPos) {
-                    ctx.globalAlpha = 0.3;
-                } else {
-                    ctx.globalAlpha = 0.8;
-                }
-                
-                if (i === 0) {
-                    ctx.moveTo(x, y);
-                } else {
-                    ctx.lineTo(x, y);
-                }
+                console.log(`🎵 Time Signature: ${signatures[newIndex].name} (${stepsPerBar} steps per bar)`);illStyle = 'rgba(255,255,255,0.1)';
+                console.log(`🎵 Array sizes updated - stepData: ${stepData[0].length}, tracks: ${tracks[0].steps.length}`);fillRect(0, 0, startPos, height); // Before start
             }
-            ctx.stroke();
+        }
+        / Draw active region background
+        function updateBPMDisplay() {   ctx.fillStyle = 'rgba(0,255,255,0.1)';
+            const display = document.getElementById('bpmDisplay');    ctx.fillRect(startPos, 0, endPos - startPos, height);
+            if (display) {
+                display.textContent = Math.round(bpm).toString();
+            }e = '#00ffff';
+        }
+        tx.globalAlpha = 0.8;
+        function updateSignatureDisplay() {   ctx.beginPath();
+            const display = document.getElementById('signatureDisplay');    
+            if (display) {a.length; i++) {
+                display.textContent = `${timeSignature.numerator}/${timeSignature.denominator}`;
+            }height / 2 + (waveformData[i] * height / 2);
+        }
+   // Dim the waveform outside start/end points
+        function toggleSequencer() {       if (x < startPos || x > endPos) {
+            console.log(`🎛️ Toggle sequencer - Current state: ${sequencerPlaying ? 'PLAYING' : 'STOPPED'}`);                    ctx.globalAlpha = 0.3;
             
-            // Draw start/end markers with improved styling
-            ctx.save();
-            ctx.globalAlpha = 1;
-            ctx.lineWidth = 2.5;
+            sequencerPlaying = !sequencerPlaying;
+            const button = document.getElementById('sequencerPlay');    }
+            
+            if (!button) {
+                console.error(`❌ Could not find sequencer play button!`);        ctx.moveTo(x, y);
+                return;
+            }
+            
+            if (sequencerPlaying) {
+                button.textContent = '⏸';ctx.stroke();
+                button.classList.add('playing');
+                startTime = audioContext ? audioContext.currentTime : Date.now() / 1000;h improved styling
+                startSequencer();
+                console.log('▶️ Sequencer started - Audio initialized:', !!audioContext);
+            } else {
             ctx.lineCap = 'round';
             
             // Start marker with glow
@@ -4162,258 +4094,6 @@
             }
         }
 
-        // ===== MIXER FUNCTIONS =====
-        
-        // Mixer state
-        let mixerState = {
-            channels: [],
-            masterVolume: 0.75,
-            soloChannel: -1 // -1 means no solo
-        };
-        
-        // Initialize mixer channels
-        function initMixer() {
-            mixerState.channels = [];
-            for (let i = 0; i < 17; i++) { // 16 tracks + master
-                mixerState.channels.push({
-                    volume: 0.75,
-                    mute: false,
-                    solo: false,
-                    pan: 0.5, // center
-                    send1: 0.0, // reverb
-                    send2: 0.0  // delay
-                });
-            }
-            updateMixerUI();
-        }
-        
-        // Update mixer UI - Vertical Version
-        function updateMixerUI() {
-            const mixerBoard = document.getElementById('mixerBoard');
-            if (!mixerBoard) return;
-            
-            mixerBoard.innerHTML = '';
-            
-            for (let i = 0; i < 17; i++) {
-                const channel = mixerState.channels[i];
-                const trackName = trackNames[i] || `Track ${i + 1}`;
-                const isActive = selectedTrack === i;
-                const isMaster = i === 16;
-                
-                const channelDiv = document.createElement('div');
-                channelDiv.className = `channel-strip ${isActive ? 'active' : ''} ${isMaster ? 'master' : ''}`;
-                channelDiv.innerHTML = `
-                    <div class="channel-label ${isMaster ? 'master' : ''}" onclick="selectTrack(${i})">
-                        ${trackName}
-                        ${!isMaster ? `<div class="channel-number">${i + 1}</div>` : ''}
-                    </div>
-                    
-                    <div class="rotary-knobs">
-                        <div class="knob-container">
-                            <div class="rotary-knob" data-channel="${i}" data-param="reverb" onmousedown="startKnobDrag(event, ${i}, 'reverb')">
-                                <div class="knob-indicator" style="transform: translateX(-50%) rotate(${(channel.send1 * 270) - 135}deg);"></div>
-                            </div>
-                            <div class="knob-label">REV</div>
-                            <div class="knob-value">${Math.round(channel.send1 * 100)}</div>
-                        </div>
-                        
-                        <div class="knob-container">
-                            <div class="rotary-knob" data-channel="${i}" data-param="delay" onmousedown="startKnobDrag(event, ${i}, 'delay')">
-                                <div class="knob-indicator" style="transform: translateX(-50%) rotate(${(channel.send2 * 270) - 135}deg);"></div>
-                            </div>
-                            <div class="knob-label">DLY</div>
-                            <div class="knob-value">${Math.round(channel.send2 * 100)}</div>
-                        </div>
-                    </div>
-                    
-                    <div class="vertical-fader" data-channel="${i}" onmousedown="startFaderDrag(event, ${i})">
-                        <div class="fader-track" style="clip-path: inset(${100 - (channel.volume * 100)}% 0 0 0);"></div>
-                        <div class="fader-handle" style="top: ${(1 - channel.volume) * 112}px;"></div>
-                    </div>
-                    <div class="fader-value">${Math.round(channel.volume * 100)}</div>
-                    
-                    ${!isMaster ? `
-                    <div class="channel-buttons">
-                        <button class="channel-btn mute ${channel.mute ? 'active' : ''}" onclick="toggleChannelMute(${i})">M</button>
-                        <button class="channel-btn solo ${channel.solo ? 'active' : ''}" onclick="toggleChannelSolo(${i})">S</button>
-                    </div>
-                    ` : ''}
-                `;
-                
-                mixerBoard.appendChild(channelDiv);
-            }
-        }
-        
-        // Fader drag functionality
-        let draggingFader = null;
-        let draggingKnob = null;
-        
-        function startFaderDrag(event, channelIndex) {
-            draggingFader = channelIndex;
-            event.preventDefault();
-            document.addEventListener('mousemove', handleFaderDrag);
-            document.addEventListener('mouseup', stopFaderDrag);
-        }
-        
-        function handleFaderDrag(event) {
-            if (draggingFader === null) return;
-            
-            const fader = event.target.closest('.vertical-fader');
-            if (!fader) return;
-            
-            const rect = fader.getBoundingClientRect();
-            const y = event.clientY - rect.top;
-            const height = rect.height;
-            const value = Math.max(0, Math.min(1, 1 - (y / height)));
-            
-            mixerState.channels[draggingFader].volume = value;
-            updateMixerUI();
-            
-            // Apply to audio engine
-            if (trackGains[draggingFader]) {
-                trackGains[draggingFader].gain.value = value;
-            }
-            if (draggingFader === 16 && masterGain) { // Master channel
-                masterGain.gain.value = value;
-            }
-        }
-        
-        function stopFaderDrag() {
-            draggingFader = null;
-            document.removeEventListener('mousemove', handleFaderDrag);
-            document.removeEventListener('mouseup', stopFaderDrag);
-        }
-        
-        // Knob drag functionality
-        function startKnobDrag(event, channelIndex, param) {
-            draggingKnob = { channel: channelIndex, param: param, startY: event.clientY };
-            event.preventDefault();
-            document.addEventListener('mousemove', handleKnobDrag);
-            document.addEventListener('mouseup', stopKnobDrag);
-        }
-        
-        function handleKnobDrag(event) {
-            if (!draggingKnob) return;
-            
-            const deltaY = draggingKnob.startY - event.clientY;
-            const sensitivity = 0.01;
-            const delta = deltaY * sensitivity;
-            
-            const channel = mixerState.channels[draggingKnob.channel];
-            const param = draggingKnob.param;
-            
-            if (param === 'reverb') {
-                channel.send1 = Math.max(0, Math.min(1, channel.send1 + delta));
-                if (trackReverbSends[draggingKnob.channel]) {
-                    trackReverbSends[draggingKnob.channel].gain.value = channel.send1;
-                }
-            } else if (param === 'delay') {
-                channel.send2 = Math.max(0, Math.min(1, channel.send2 + delta));
-                if (trackDelaySends[draggingKnob.channel]) {
-                    trackDelaySends[draggingKnob.channel].gain.value = channel.send2;
-                }
-            }
-            
-            updateMixerUI();
-            draggingKnob.startY = event.clientY;
-        }
-        
-        function stopKnobDrag() {
-            draggingKnob = null;
-            document.removeEventListener('mousemove', handleKnobDrag);
-            document.removeEventListener('mouseup', stopKnobDrag);
-        }
-        
-        // Toggle channel mute
-        function toggleChannelMute(channelIndex) {
-            mixerState.channels[channelIndex].mute = !mixerState.channels[channelIndex].mute;
-            updateMixerUI();
-            
-            // Apply mute to audio engine
-            if (trackGains[channelIndex]) {
-                const isMuted = mixerState.channels[channelIndex].mute;
-                trackGains[channelIndex].gain.value = isMuted ? 0 : mixerState.channels[channelIndex].volume;
-            }
-        }
-        
-        // Toggle channel solo
-        function toggleChannelSolo(channelIndex) {
-            const channel = mixerState.channels[channelIndex];
-            channel.solo = !channel.solo;
-            
-            // If turning on solo, turn off all other solos
-            if (channel.solo) {
-                mixerState.soloChannel = channelIndex;
-                for (let i = 0; i < mixerState.channels.length - 1; i++) { // Exclude master
-                    if (i !== channelIndex) {
-                        mixerState.channels[i].solo = false;
-                    }
-                }
-            } else {
-                mixerState.soloChannel = -1;
-            }
-            
-            updateMixerUI();
-            
-            // Apply solo logic to audio engine
-            for (let i = 0; i < trackGains.length - 1; i++) { // Exclude master
-                if (trackGains[i]) {
-                    const shouldPlay = mixerState.soloChannel === -1 || mixerState.channels[i].solo;
-                    const isMuted = mixerState.channels[i].mute;
-                    const finalGain = (shouldPlay && !isMuted) ? mixerState.channels[i].volume : 0;
-                    trackGains[i].gain.value = finalGain;
-                }
-            }
-        }
-        
-        // Reset mixer to default values
-        function resetMixer() {
-            for (let i = 0; i < mixerState.channels.length; i++) {
-                mixerState.channels[i] = {
-                    volume: 0.75,
-                    mute: false,
-                    solo: false,
-                    pan: 0.5,
-                    send1: 0.0, // reverb
-                    send2: 0.0  // delay
-                };
-            }
-            mixerState.masterVolume = 0.75;
-            mixerState.soloChannel = -1;
-            
-            updateMixerUI();
-            
-            // Reset audio engine
-            for (let i = 0; i < trackGains.length; i++) {
-                if (trackGains[i]) {
-                    trackGains[i].gain.value = 0.75;
-                }
-                if (trackDelaySends[i]) {
-                    trackDelaySends[i].gain.value = 0.0;
-                }
-                if (trackReverbSends[i]) {
-                    trackReverbSends[i].gain.value = 0.0;
-                }
-            }
-            if (masterGain) {
-                masterGain.gain.value = 0.75;
-            }
-        }
-        
-        // Get effective volume for a channel (considering solo/mute)
-        function getEffectiveChannelVolume(channelIndex) {
-            const channel = mixerState.channels[channelIndex];
-            
-            // If channel is muted, return 0
-            if (channel.mute) return 0;
-            
-            // If any channel is soloed and this isn't the soloed channel, return 0
-            if (mixerState.soloChannel !== -1 && !channel.solo) return 0;
-            
-            // Return the channel volume
-            return channel.volume;
-        }
-
         // ===== INITIALIZATION =====
         function initStepGrid() {
             const stepGrid = document.getElementById('stepGrid');
@@ -4559,7 +4239,6 @@
             updateSampleInfo();
             updateBPMDisplay();
             updateSignatureDisplay();
-            initMixer(); // Initialize the mixer
             
             // Initialize MIDI
             initMIDI();
@@ -4680,7 +4359,7 @@
             generatePianoKeyboard();
             updateWaveform();
             updateEnvelopeDisplay();
-            updateMixerUI();
+            initMixer();
             
             console.log('✅ UI initialized successfully!');
         }
@@ -4691,10 +4370,191 @@
             // Auto-initialize audio on page load
             initAudio().then(() => {
                 console.log('🔊 Audio auto-initialized successfully!');
+                // Initialize mixer after audio is ready
+                setTimeout(() => {
+                    initMixer();
+                }, 50);
             }).catch(err => {
                 console.warn('⚠️ Audio auto-init failed, will try on first user interaction:', err);
+                // Still initialize mixer UI even if audio fails
+                setTimeout(() => {
+                    initMixer();
+                }, 50);
             });
         }, 100);
+
+        // ===== MIXER FUNCTIONALITY =====
+        
+        let trackGains = [];
+        let delaySends = [];
+        let reverbSends = [];
+        let delayNode = null;
+        let reverbNode = null;
+        let delayFeedback = null;
+        let delayFilter = null;
+        let reverbGain = null;
+        let draggingFader = null;
+        
+        function initMixerAudio() {
+            if (!audioContext) return;
+            
+            console.log('🎛️ Initializing mixer audio...');
+            
+            // Create track gain nodes
+            trackGains = [];
+            delaySends = [];
+            reverbSends = [];
+            
+            for (let i = 0; i < 17; i++) { // 16 tracks + master
+                const gain = audioContext.createGain();
+                const delaySend = audioContext.createGain();
+                const reverbSend = audioContext.createGain();
+                
+                gain.gain.value = i === 16 ? 0.75 : 0.8; // Master slightly lower
+                delaySend.gain.value = 0;
+                reverbSend.gain.value = 0;
+                
+                trackGains.push(gain);
+                delaySends.push(delaySend);
+                reverbSends.push(reverbSend);
+                
+                // Connect to master
+                if (i < 16) {
+                    gain.connect(masterGain);
+                }
+            }
+            
+            // Create delay effect
+            delayNode = audioContext.createDelay(1.0);
+            delayFeedback = audioContext.createGain();
+            delayFilter = audioContext.createBiquadFilter();
+            
+            delayNode.delayTime.value = 0.25;
+            delayFeedback.gain.value = 0.4;
+            delayFilter.type = 'lowpass';
+            delayFilter.frequency.value = 8000;
+            
+            delayNode.connect(delayFeedback);
+            delayFeedback.connect(delayFilter);
+            delayFilter.connect(delayNode);
+            delayFilter.connect(masterGain);
+            
+            // Create reverb effect (simple convolver)
+            reverbNode = audioContext.createConvolver();
+            reverbGain = audioContext.createGain();
+            reverbGain.gain.value = 0.3;
+            
+            // Connect reverb sends to delay and reverb
+            for (let i = 0; i < 16; i++) {
+                delaySends[i].connect(delayNode);
+                reverbSends[i].connect(reverbGain);
+            }
+            
+            reverbGain.connect(masterGain);
+            
+            // Generate initial reverb impulse
+            regenerateReverb();
+            
+            console.log('✅ Mixer and FX initialized');
+        }
+        
+        function initMixer() {
+            console.log('🎛️ Building functional mixer UI...');
+            const mixerBoard = document.getElementById('mixerBoard');
+            
+            if (!mixerBoard) {
+                console.error('❌ mixerBoard element not found!');
+                setTimeout(() => initMixer(), 100);
+                return;
+            }
+            
+            mixerBoard.innerHTML = '';
+            mixerBoard.style.display = 'flex';
+            
+            // Create 16 track channels + 1 master
+            for (let i = 0; i < 17; i++) {
+                const isMaster = i === 16;
+                const strip = document.createElement('div');
+                strip.className = `channel-strip ${isMaster ? 'master' : ''} ${i === selectedTrack ? 'active' : ''}`;
+                strip.dataset.channel = i;
+                
+                // Create full functional mixer strip
+                strip.innerHTML = `
+                    <div class="channel-label ${isMaster ? 'master' : ''}" onclick="selectMixerTrack(${i})">
+                        ${isMaster ? 'MST' : `T${i + 1}`}
+                    </div>
+                    
+                    <!-- Signal Meter -->
+                    <div class="signal-meter" id="meter${i}">
+                        <div class="meter-bar" id="meterBar${i}"></div>
+                        <div class="meter-clip" id="meterClip${i}"></div>
+                    </div>
+                    
+                    <!-- Send Knobs -->
+                    <div class="send-knobs">
+                        <div class="send-knob delay" 
+                             id="delaySend${i}" 
+                             data-value="0" 
+                             style="--rotation: -120deg"
+                             title="Delay Send"></div>
+                        <div class="send-knob reverb" 
+                             id="reverbSend${i}" 
+                             data-value="0" 
+                             style="--rotation: -120deg"
+                             title="Reverb Send"></div>
+                    </div>
+                    
+                    <!-- Send Labels -->
+                    <div class="send-labels">
+                        <span>DLY</span>
+                        <span>RVB</span>
+                    </div>
+                    
+                    <!-- Volume Fader -->
+                    <div class="volume-fader" id="fader${i}" data-value="${isMaster ? 0.75 : 0.8}">
+                        <div class="fader-track" id="faderTrack${i}" style="--fader-top: ${isMaster ? '25%' : '20%'}"></div>
+                        <div class="fader-handle" id="faderHandle${i}" style="--handle-pos: ${isMaster ? '20px' : '16px'}"></div>
+                    </div>
+                    
+                    <!-- Volume Value -->
+                    <div class="fader-value" id="faderValue${i}">${isMaster ? '75%' : '80%'}</div>
+                `;
+                
+                mixerBoard.appendChild(strip);
+                
+                // Initialize interactive controls
+                initChannelControls(i);
+            }
+            
+            console.log('✅ Functional mixer created with', mixerBoard.children.length, 'channels');
+            
+            // Start signal metering
+            startSignalMetering();
+        }
+        
+        function selectMixerTrack(trackIndex) {
+            if (trackIndex < 16) {
+                selectTrack(trackIndex);
+            }
+        }
+        
+        function regenerateReverb() {
+            if (!audioContext || !reverbNode) return;
+            
+            // Generate a simple reverb impulse response
+            const length = audioContext.sampleRate * 1.5;
+            const impulse = audioContext.createBuffer(2, length, audioContext.sampleRate);
+            
+            for (let channel = 0; channel < 2; channel++) {
+                const channelData = impulse.getChannelData(channel);
+                for (let i = 0; i < length; i++) {
+                    const decay = Math.pow(1 - i / length, 2);
+                    channelData[i] = (Math.random() * 2 - 1) * decay;
+                }
+            }
+            
+            reverbNode.buffer = impulse;
+        }
         
         console.log('🎵 Softwaretakt script loaded successfully!');
     </script>

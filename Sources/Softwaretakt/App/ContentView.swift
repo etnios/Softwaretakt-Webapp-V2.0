@@ -37,6 +37,7 @@ struct ContentView: View {
         case fmTest    // 🔥 FM synthesis test console!
         case projects  // 🗂️ Project management
         case samples   // 📂 Simple sample browser
+        case web       // 🌐 Web version
     }
     
     init() {
@@ -440,6 +441,7 @@ struct ContentView: View {
                     enhancedModeCard(.fmTest, icon: "waveform.path.ecg", title: "FM SYNTH", accentColor: .orange)
                     enhancedModeCard(.projects, icon: "folder.fill", title: "PROJECTS", accentColor: .green)
                     enhancedModeCard(.samples, icon: "music.note.list", title: "SAMPLES", accentColor: .pink)
+                    enhancedModeCard(.web, icon: "globe", title: "WEB VERSION", accentColor: .red)
                 }
                 .padding(.horizontal, 24)
             }
@@ -693,6 +695,9 @@ struct ContentView: View {
                     case .samples:
                         SimpleSampleBrowserView()
                             .environmentObject(audioEngine)
+                    case .web:
+                        SoftwaretaktWebView()
+                            .ignoresSafeArea()
                     }
                 }
                 .padding(20)
@@ -906,6 +911,18 @@ struct ContentView: View {
                 .padding(.vertical, 8)
                 .background(viewMode == .samples ? Color.purple : Color.gray.opacity(0.3))
                 .foregroundColor(viewMode == .samples ? .white : .gray)
+            }
+            
+            Button(action: { viewMode = .web }) {
+                HStack {
+                    Image(systemName: "globe")
+                    Text("WEB VERSION")
+                }
+                .font(.caption.bold())
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(viewMode == .web ? Color.red : Color.gray.opacity(0.3))
+                .foregroundColor(viewMode == .web ? .white : .gray)
             }
             
             Spacer()
